@@ -27,18 +27,15 @@ class LazyImage {
     }
 
     loadImagesImmediately() {
+        console.log('WARNING: you browser do not have support to "IntersectionObserver" (object)');
         this.images.forEach(image => this.loadImage(image));
     }
 
     loadImage(image) {
-        const src = image.getAttribute('data-src');
-        if (src) {
-            image.src = src;
-        }
+        if (src)
+            image.src = image.getAttribute('data-src');
     }
 }
 
-// Export the class for usage in other scripts
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined')
     module.exports = LazyImage;
-}
