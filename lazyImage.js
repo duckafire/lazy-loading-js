@@ -1,4 +1,4 @@
-class LazyImage {
+class LazyLoadImage {
     constructor(selector) {
         this.images = document.querySelectorAll(selector);
     }
