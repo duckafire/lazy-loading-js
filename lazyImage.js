@@ -4,11 +4,10 @@ class LazyLoadImage {
     }
 
     init() {
-        if ('IntersectionObserver' in window) {
+        if ('IntersectionObserver' in window)
             this.observeWithIntersectionObserver();
-        } else {
+        else
             this.loadImagesImmediately();
-        }
     }
 
     observeWithIntersectionObserver() {
@@ -27,13 +26,12 @@ class LazyLoadImage {
     }
 
     loadImagesImmediately() {
-        console.log('WARNING: you browser do not have support to "IntersectionObserver" (object)');
+        console.log('WARNING: your browser do not have support to "IntersectionObserver" (object)');
         this.images.forEach(image => this.loadImage(image));
     }
 
     loadImage(image) {
-        if (src)
-            image.src = image.getAttribute('data-src');
+        image.src = image.dataset.src;
     }
 }
 
