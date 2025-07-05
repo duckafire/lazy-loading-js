@@ -27,10 +27,9 @@ class LazyLoadingImage {
 
 	#ELEMENT_INSTANCE = HTMLImageElement;
 
-	#AWATING = -1;
-	#SHOWED  =  0;
-	#HIDED   =  1;
-	#state   = this.#AWATING;
+	#HIDED    = "-1";
+	#AWAITING =  "0";
+	#SHOWED   =  "1";
 
 	constructor(query, startWarning, awaitToStart) {
 		this.#items = document.querySelectorAll(query);
@@ -67,8 +66,10 @@ class LazyLoadingImage {
 		this.#hasSupport = ("IntersectionObserver" in window)
 
 		if(this.#hasSupport){
-			this.#awaitToWorking();
-			this.#connectToObserver();
+			this.#items.forEach(item => {
+				this.#awaitToWorking(item);
+				this.#connectToObserver(item);
+			});
 			return;
 		}
 
@@ -88,58 +89,70 @@ class LazyLoadingImage {
 		});
 	}
 
-	#awaitToWorking(){
-		for(const item of this.#items){
-			item.src = item.dataset.placeholder;
-			item.dataset.awaiting = "yes";
+	#awaitToWorking(item){
+		this.#setItemProperties(item);
 
-			item.onload = () => {
-				let loader = new Image();
-				loader.src = item.dataset.src;
+		item.onload = () => {
+			let loader = new Image();
+			loader.src = item.dataset.src;
 
-				loader.onload = () => {
-					item.dataset.awaiting = "no";
-					this.#showSource(item);
-					loader = null; // "throw" in the collect garbage
-				}
+			loader.onload = () => {
+				loader = null; // "throw" in the collect garbage
+				item.dataset.awaiting = "no";
+
+				const hitbox = item.getBoundingClientRect();
+
+				// if the screen was maintened stopped, after page (re)load,
+				// the Intersection... will not update
+				if(hitbox.top >= 0 && hitbox.bottom < window.innerHeight && hitbox.left >= 0 && hitbox.right < window.innerWidth)
+					this.#showSource(item, this.#SHOWED);
 			}
 		}
 	}
 
-	#connectToObserver(){
+	#setItemProperties(item){
+		item.src = item.dataset.placeholder;
+		item.dataset.currentSrc = item.dataset.placeholder;
+		item.dataset.state    = this.#AWAITING;
+		item.dataset.awaiting = "yes";
+	}
+
+	#connectToObserver(item){
 		const api = new IntersectionObserver(entities => {
 			entities.forEach(entity => {
-				if(entity.isIntersecting && this.#state != this.#SHOWED){
-					this.#state = this.#SHOWED;
-					this.#showSource(entity.target);
+				if(entity.target.dataset.awaiting == "yes")
+					return;
 
-				}else if(this.#state != this.#HIDED){
-					this.#state = this.#HIDED;
-					this.#hideSource(entity.target);
-				}
+				if(entity.isIntersecting)
+					this.#showSource(entity.target, this.#SHOWED);
+
+				else
+					this.#hideSource(entity.target, this.#HIDED);
 			});
 		});
 
-		this.#items.forEach(item => {
-			api.observe(item);
-			item.src = item.dataset.placeholder;
-		});
+		api.observe(item);
 
-		this.disconnectFromObserver = () => {
-			this.#started = false;
-			this.#state   = AWATING;
+		if(this.disconnectFromObserver == undefined){
+			this.disconnectFromObserver = () => {
+				this.#started = false;
 
-			this.#items.forEach(item => {
-				api.unobserve(item);
-			});
+				this.#items.forEach(item => {
+					api.unobserve(item);
+					entity.target.dataset.state = this.#AWAITING;
+				});
+			}
 		}
 	}
 
-	#updateSource(item, dataProperty){
+	#updateSource(item, state, dataProperty){
 		if(item.dataset[dataProperty] != undefined){
 			// avoid unnecessary reload
-			if(item.dataset.awaiting == "no" && item.src != item.dataset[dataProperty])
+			if((item.dataset.state != state || item.dataset.state == this.#AWAITING) && item.dataset.currentSrc != item.dataset[dataProperty]){
+				item.dataset.state = state;
 				item.src = item.dataset[dataProperty];
+				item.dataset.currentSrc = item.dataset[dataProperty];
+			}
 
 			return;
 		}
@@ -147,11 +160,11 @@ class LazyLoadingImage {
 		throw new Error(`Data property "data-${dataProperty}" not found.`);
 	}
 
-	#showSource(item){
-		this.#updateSource(item, "src");
+	#showSource(item, state){
+		this.#updateSource(item, state, "src");
 	}
 
-	#hideSource(item){
-		this.#updateSource(item, "placeholder");
+	#hideSource(item, state){
+		this.#updateSource(item, state, "placeholder");
 	}
 }
