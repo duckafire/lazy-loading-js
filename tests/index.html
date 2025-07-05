@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Lazy loading js - test</title>
+	<script src="../src/Image.js"></script>
+	<!-- <script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@main/src/Image.js"></script> -->
+	<style>
+		* {
+			inset: 0;
+			padding: 0;
+			margin: 0;
+		}
+		body {
+			width: 100vw;
+			height: 300dvh;
+			background-color: #111;
+			color: #ccc;
+			padding-top: 10dvh;
+		}
+		#container {
+			width: 100%;
+			height: max-content;
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			row-gap: 200dvh;
+			place-items: center;
+		}
+		#container img {
+			width: 200px;
+		}
+	</style>
+</head>
+<body>
+	<div id="container">
+		<img src="./images/quick-brown-fox-original.jpg"/>
+		<img src="./images/quick-brown-fox-placeholder.jpg"/>
+		<img class="foo"
+			data-src="./images/quick-brown-fox-original.jpg"
+			data-placeholder="./images/quick-brown-fox-placeholder.jpg"/>
+		<img src="./images/lazy-dog-original.jpg"/>
+		<img src="./images/lazy-dog-placeholder.jpg"/>
+		<img class="foo"
+			data-src="./images/lazy-dog-original.jpg"
+			data-placeholder="./images/lazy-dog-placeholder.jpg"/>
+	</div>
+</body>
+<script>
+	new LazyLoadImage(".foo");
+</script>
+</html>
