@@ -71,7 +71,7 @@ class LazyLoadingImage {
 			return;
 		}
 
-		this.showAllWithoutObserver();
+		this.#showAllWithoutObserver();
 
 		if(warning){
 			console.error(
@@ -81,9 +81,9 @@ class LazyLoadingImage {
 		}
 	}
 
-	showAllWithoutObserver(){
+	#showAllWithoutObserver(){
 		this.#items.forEach(item => {
-			this.showSource(item);
+			this.#showSource(item);
 		});
 	}
 
@@ -92,11 +92,11 @@ class LazyLoadingImage {
 			entities.forEach(entity => {
 				if(entity.isIntersecting && this.#state != this.#SHOWED){
 					this.#state = this.#SHOWED;
-					this.showSource(entity.target);
+					this.#showSource(entity.target);
 
 				}else if(this.#state != this.#HIDED){
 					this.#state = this.#HIDED;
-					this.hideSource(entity.target);
+					this.#hideSource(entity.target);
 				}
 			});
 		});
@@ -128,11 +128,11 @@ class LazyLoadingImage {
 		throw new Error(`Data property "data-${dataProperty}" not found.`);
 	}
 
-	showSource(item){
+	#showSource(item){
 		this.#updateSource(item, "src");
 	}
 
-	hideSource(item){
+	#hideSource(item){
 		this.#updateSource(item, "placeholder");
 	}
 }
