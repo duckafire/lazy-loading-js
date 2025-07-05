@@ -67,6 +67,7 @@ class LazyLoadingImage {
 		this.#hasSupport = ("IntersectionObserver" in window)
 
 		if(this.#hasSupport){
+			this.#awaitToWorking();
 			this.#connectToObserver();
 			return;
 		}
@@ -85,6 +86,24 @@ class LazyLoadingImage {
 		this.#items.forEach(item => {
 			this.#showSource(item);
 		});
+	}
+
+	#awaitToWorking(){
+		for(const item of this.#items){
+			item.src = item.dataset.placeholder;
+			item.dataset.awaiting = "yes";
+
+			item.onload = () => {
+				let loader = new Image();
+				loader.src = item.dataset.src;
+
+				loader.onload = () => {
+					item.dataset.awaiting = "no";
+					this.#showSource(item);
+					loader = null; // "throw" in the collect garbage
+				}
+			}
+		}
 	}
 
 	#connectToObserver(){
@@ -119,7 +138,7 @@ class LazyLoadingImage {
 	#updateSource(item, dataProperty){
 		if(item.dataset[dataProperty] != undefined){
 			// avoid unnecessary reload
-			if(item.src != item.dataset[dataProperty])
+			if(item.dataset.awaiting == "no" && item.src != item.dataset[dataProperty])
 				item.src = item.dataset[dataProperty];
 
 			return;
