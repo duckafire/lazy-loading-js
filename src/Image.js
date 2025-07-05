@@ -30,14 +30,20 @@ class LazyLoadImage {
 	#AWATING = -1;
 	#SHOWED  =  0;
 	#HIDED   =  1;
-	#state   = AWATING;
+	#state   = this.#AWATING;
 
 	constructor(query, startWarning, awaitToStart) {
 		this.#items = document.querySelectorAll(query);
 
+		if(this.#items.length == 0)
+			throw new Error(`None was found. Query: "${query}"`);
+
 		this.#items.forEach(item => {
 			if(!(item instanceof this.#ELEMENT_INSTANCE))
 				throw new Error(`Invalid instance. Expected "${this.constructor.name}" instead "${item.constructor.name}".` );
+
+			if(item instanceof HTMLImageElement)
+				item.loading = "lazy";
 		});
 
 		if(!awaitToStart)
@@ -84,12 +90,12 @@ class LazyLoadImage {
 	#connectToObserver(){
 		const api = new IntersectionObserver(entities => {
 			entities.forEach(entity => {
-				if(entity.isIntersecting && this.#state != SHOWED){
-					this.#state = SHOWED;
+				if(entity.isIntersecting && this.#state != this.#SHOWED){
+					this.#state = this.#SHOWED;
 					this.showSource(entity.target);
 
-				}else if(this.#state != HIDED){
-					this.#state = HIDED;
+				}else if(this.#state != this.#HIDED){
+					this.#state = this.#HIDED;
 					this.hideSource(entity.target);
 				}
 			});
@@ -97,6 +103,7 @@ class LazyLoadImage {
 
 		this.#items.forEach(item => {
 			api.observe(item);
+			item.src = item.dataset.placeholder;
 		});
 
 		this.disconnectFromObserver = () => {
