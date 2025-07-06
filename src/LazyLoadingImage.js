@@ -89,6 +89,12 @@ class LazyLoadingImage {
 		});
 	}
 
+	#checkItemPosition(pos0, pos1, isWidth){
+		const max = window["inner" + (isWidth ? "Width" : "Height")];
+
+		return (pos0 >= 0 && pos0 <= max) || (pos1 >= 0 && pos1 <= max);
+	}
+
 	#awaitToWorking(item){
 		this.#setItemProperties(item);
 
@@ -100,11 +106,12 @@ class LazyLoadingImage {
 				loader = null; // "throw" in the collect garbage
 				item.dataset.awaiting = "no";
 
-				const hitbox = item.getBoundingClientRect();
+				// hitbox
+				const hb = item.getBoundingClientRect();
 
 				// if the screen was maintened stopped, after page (re)load,
 				// the Intersection... will not update
-				if(hitbox.top >= 0 && hitbox.bottom < window.innerHeight && hitbox.left >= 0 && hitbox.right < window.innerWidth)
+				if(this.#checkItemPosition(hb.top, hb.bottom) || this.#checkItemPosition(hb.left, hb.right, true))
 					this.#showSource(item, this.#SHOWED);
 			}
 		}
