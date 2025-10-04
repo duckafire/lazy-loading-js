@@ -1,0 +1,24 @@
+{
+  "name": "@duckafire/lazy-loading-js",
+  "author": "duckafire",
+  "version": "2.0.2",
+  "license": "Zlib",
+  "description": "Simple lazy loading algorithm for websites front-end.",
+  "keywords": ["client", "html", "images", "web", "front-end", "optimization", "lazy", "loading", "lazy-loading"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duckafire/lazy-loading-js.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "src"
+  ],
+  "custom-fields": {
+    "cloud-repostories": [
+      "https://github.com/duckafire/lazy-loading-js.git",
+      "https://gitlab.com/duckafire/lazy-loading-js.git",
+      "https://npmjs.com/package/@duckafire/lazy-loading-js.git"
+    ]
+  }
+}
