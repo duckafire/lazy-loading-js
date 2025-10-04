@@ -25,7 +25,7 @@ tecnique to images, in order to optimize website pages.
 Import the API in your HTML code:
 
 ``` html
-<script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@online/src/LazyLoadingImage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@duckafire/lazy-loading-js@2.0.2/src/LazyLoadingImage.js"></script>
 ```
 
 [source]: https://github.com/duckafire/lazy-loading-js/tree/main/src/ "Lazy loading API source code"
@@ -43,8 +43,6 @@ the `img` is visible.
 is not visible. Used for avoid the breaking of the page layout.
 
 ``` html
-<script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@online/src/LazyLoadingImage.js"></script>
-
 <img data-src="./foo.png" data-placeholder="./foo-placeholder.png"/>
 ```
 
@@ -54,8 +52,6 @@ Attribute a specific class to all elements whose visibility will be controlled
 by the API.
 
 ``` html
-<script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@online/src/LazyLoadingImage.js"></script>
-
 <img class="foo" data-src="./foo.png" data-placeholder="./foo-placeholder.png"/>
 ```
 
@@ -65,8 +61,6 @@ Instance a object using the class (choosed in the last step) as first argument a
 
 
 ``` html
-<script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@online/src/LazyLoadingImage.js"></script>
-
 <img class="foo" data-src="./foo.png" data-placeholder="./foo-placeholder.png"/>
 
 <script>
