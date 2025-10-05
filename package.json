@@ -1,13 +1,19 @@
 {
   "name": "@duckafire/lazy-loading-js",
   "author": "duckafire",
-  "version": "2.0.2",
+  "version": "2.0.2-1",
   "license": "Zlib",
   "description": "Simple lazy loading algorithm for websites front-end.",
   "keywords": ["client", "html", "images", "web", "front-end", "optimization", "lazy", "loading", "lazy-loading"],
+  "devDependencies": {
+    "terser": "^5.43.1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/duckafire/lazy-loading-js.git"
+  },
+  "scripts": {
+    "compress": "for file in ./src/*; do npx terser \"$file\" -o \"./lib/$(basename -- \"${file%.js}\").min.js\" --compress --mangle; done"
   },
   "files": [
     "LICENSE",
