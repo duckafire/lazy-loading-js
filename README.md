@@ -25,7 +25,7 @@ tecnique to images, in order to optimize website pages.
 Import the API in your HTML code:
 
 ``` html
-<script src="https://cdn.jsdelivr.net/npm/@duckafire/lazy-loading-js@2.0.2-3/dist/LazyLoadingImage.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@duckafire/lazy-loading-js@2.0.2-4/dist/LazyLoadingImage.min.js"></script>
 ```
 
 [source]: https://github.com/duckafire/lazy-loading-js/tree/main/src/ "Lazy loading API source code"
