@@ -4,16 +4,29 @@
   "version": "2.0.2-4",
   "license": "Zlib",
   "description": "Simple lazy loading algorithm for websites front-end.",
-  "keywords": ["client", "html", "images", "web", "front-end", "optimization", "lazy", "loading", "lazy-loading"],
+  "keywords": [
+    "client",
+    "html",
+    "images",
+    "web",
+    "front-end",
+    "optimization",
+    "lazy",
+    "loading",
+    "lazy-loading"
+  ],
   "devDependencies": {
-    "terser": "^5.43.1"
+    "terser": "^5.43.1",
+    "typescript": "^4.9.5"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/duckafire/lazy-loading-js.git"
   },
   "scripts": {
-    "compress": "for file in ./src/*; do npx terser \"$file\" -o \"./lib/$(basename -- \"${file%.js}\").min.js\" --compress --mangle; done"
+    "compile": "tsc --target ES2016 --module none --outDir ./dist --rootDir ./src --strict --include src/**/*",
+    "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; done",
+    "build": "npm run compile && npm run minify"
   },
   "files": [
     "LICENSE",
