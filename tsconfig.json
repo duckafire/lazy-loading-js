@@ -4,6 +4,7 @@
     "module": "none",
     "outDir": "./dist",
     "rootDir": "./src",
+    "strictNullChecks": false,
     "strict": true
   },
   "include": ["src/**/*"]
