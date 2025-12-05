@@ -22,29 +22,29 @@
 
 class __TypeValidator__
 {
-	#value: unknown = undefined;
-	#fallbackValue: unknown = undefined;
-	#exceptionMessage: string = "A type error occur.";
-	#validValue: boolean = false;
-	#safe: boolean = false;
+	private value: unknown = null;
+	private fallbackValue: unknown = null;
+	private exceptionMessage: string = "A type error occur.";
+	private validValue: boolean = false;
+	private safe: boolean = false;
 
-	#expectStuff(condit: boolean, exMessage: string): __TypeValidator__
+	private expectStuff(condit: boolean, exMessage: string): __TypeValidator__
 	{
-		this.#validValue = condit;
-		this.#exceptionMessage = exMessage;
+		this.validValue = condit;
+		this.exceptionMessage = exMessage;
 		return this;
 	}
 
 	constructor(v: unknown)
 	{
-		this.#value = v;
+		this.value = v;
 	}
 
 	expectType(t: string): __TypeValidator__
 	{
-		const TYPE = typeof this.#value;
+		const TYPE = typeof this.value;
 
-		return this.#expectStuff(
+		return this.expectStuff(
 			(TYPE !== t),
 			`Expecting type "${t}", instead "${TYPE}".`,
 		);
@@ -52,9 +52,9 @@ class __TypeValidator__
 
 	expectTag(): __TypeValidator__
 	{
-		return this.#expectStuff(
-			(this.#value instanceof HTMLElement),
-			`Expecting instance of "HTMLElement", instead "${(this.#value as Function).constructor.name}".`,
+		return this.expectStuff(
+			(this.value instanceof HTMLImageElement),
+			`Expecting instance of "HTMLElement", instead "${(this.value as Function).constructor.name}".`,
 		);
 	}
 
@@ -62,32 +62,32 @@ class __TypeValidator__
 	{
 		// It, indirectly, enables
 		// "safe mode".
-		this.#fallbackValue = v;
+		this.fallbackValue = v;
 		return this;
 	}
 
 	noException(): __TypeValidator__
 	{
-		this.#safe = true;
+		this.safe = true;
 		return this;
 	}
 
 	validate(): unknown
 	{
-		if(this.#validValue)
-			return this.#value;
+		if(this.validValue)
+			return this.value;
 
-		if(this.#fallbackValue !== undefined)
-			return this.#fallbackValue;
+		if(this.fallbackValue !== null)
+			return this.fallbackValue;
 
-		if(!this.#safe)
-			throw new TypeError( this.#exceptionMessage );
+		if(!this.safe)
+			throw new TypeError( this.exceptionMessage );
 
 		return null;
 	}
 	
 	onlyValidate(): boolean
 	{
-		return this.#validValue
+		return this.validValue
 	}
 };
