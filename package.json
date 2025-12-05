@@ -24,9 +24,8 @@
     "url": "git+https://github.com/duckafire/lazy-loading-js.git"
   },
   "scripts": {
-    "compile": "tsc --target ES2016 --module none --outDir ./dist --rootDir ./src --strict --include src/**/*",
     "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; done",
-    "build": "npm run compile && npm run minify"
+    "build": "npx tsc && npm run minify"
   },
   "files": [
     "LICENSE",
