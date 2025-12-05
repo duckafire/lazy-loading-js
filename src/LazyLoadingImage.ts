@@ -91,3 +91,81 @@ class __TypeValidator__
 		return this.validValue
 	}
 };
+
+// LLI === Lazy Loading Image
+
+interface IImgSrc
+{
+	high: string;
+	lazy: string;
+};
+
+interface IStyleClasses
+{
+	high: string[];
+	lazy: string[];
+};
+
+class __LLI_Element__
+{
+	private readonly elem: HTMLImageElement;
+	private readonly imgSrc: IImgSrc;
+	private readonly styleClasses: IStyleClasses;
+
+	constructor(elem: HTMLImageElement, srcIsLazy: boolean = true)
+	{
+		this.elem = elem;
+
+		this.imgSrc = {
+			high: this.catchAttr("high", !srcIsLazy),
+			lazy: this.catchAttr("lazy",  srcIsLazy),
+		};
+
+		this.styleClasses = {
+			high: (this.catchAttr("styleHigh", !srcIsLazy)?.split(",")) || null,
+			lazy: (this.catchAttr("styleLazy",  srcIsLazy)?.split(",")) || null,
+		};
+
+		this.clearElemAttr();
+	}
+
+	useHigh(highClasses: string[], lazyClasses: string[]): void
+	{
+		this.toggleSrc( this.imgSrc.high, true );
+		this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
+		this.toggleStyle( lazyClasses, highClasses );
+	}
+
+	useLazy(highClasses: string[], lazyClasses: string[]): void
+	{
+		this.toggleSrc( this.imgSrc.high );
+		this.toggleStyle( this.styleClasses.high, this.styleClasses.lazy );
+		this.toggleStyle( highClasses, lazyClasses );
+	}
+
+	private catchAttr(field: string, useSrc: boolean = false): string
+	{
+		return this.elem.dataset[ field ] ?? (useSrc ? this.elem.src : null);
+	}
+
+	private clearElemAttr(): void
+	{
+		for(const ATTR of ["high", "lazy", "styleHigh", "styleLazy"])
+			delete this.elem.dataset[ ATTR as keyof DOMStringMap ];
+	}
+
+	private toggleSrc(src: string, isHigh: boolean = false): void
+	{
+		if(this.elem.src !== src)
+			this.elem.src = src;
+	}
+
+	private toggleStyle(toAdd: string[], toRmv: string[]): void
+	{
+		if(toRmv !== null)
+			this.elem.classList.remove( ...toRmv );
+
+		if(toAdd !== null)
+			this.elem.classList.add(    ...toAdd );
+	}
+};
