@@ -178,3 +178,47 @@ class __LLI_Element__
 			this.elem.classList.add(    ...toAdd );
 	}
 };
+
+class __LLI_ElementGroup__
+{
+	private readonly query: string;
+	private readonly srcIsLazy: boolean;
+	private readonly styleClasses: IStyleClasses;
+	private readonly elements: __LLI_Element__[];
+
+	constructor(query: string, srcIsLazy: boolean, highClasses: string[], lazyClasses: string[])
+	{
+		this.query     = new __TypeValidator__(query).expectType("string").validate();
+		this.srcIsLazy = srcIsLazy;
+
+		this.styleClasses = {
+			high: this.catchStyleClasses( highClasses ),
+			lazy: this.catchStyleClasses( lazyClasses ),
+		};
+
+		this.elements = [];
+		document.querySelectorAll( this.query ).forEach((elem: unknown): void =>
+		{
+			this.elements.push( new __LLI_Element__(elem as HTMLImageElement, this.srcIsLazy) );
+		});
+	}
+
+	startToObserve(watcher: IntersectionObserver)
+	{
+		this.elements.forEach((elem: __LLI_Element__, groupPositionId: number): void =>
+		{
+			watcher.observe( elem.preparateToBeObserved( groupPositionId ) );
+		});
+	}
+
+	private catchStyleClasses(storage: string[]): string[]
+	{
+		if(storage === null)
+			return null;
+
+		for(const CLASS of new __TypeValidator__(storage).expectType("array").validate())
+			new __TypeValidator__(CLASS).expectType("string").validate();
+
+		return storage;
+	}
+};
