@@ -28,13 +28,6 @@ class __TypeValidator__
 	private validValue: boolean = false;
 	private safe: boolean = false;
 
-	private expectStuff(condit: boolean, exMessage: string): __TypeValidator__
-	{
-		this.validValue = condit;
-		this.exceptionMessage = exMessage;
-		return this;
-	}
-
 	constructor(v: unknown)
 	{
 		this.value = v;
@@ -90,6 +83,13 @@ class __TypeValidator__
 	{
 		return this.validValue
 	}
+
+	private expectStuff(condit: boolean, exMessage: string): __TypeValidator__
+	{
+		this.validValue = condit;
+		this.exceptionMessage = exMessage;
+		return this;
+	}
 };
 
 // LLI === Lazy Loading Image
@@ -114,7 +114,9 @@ class __LLI_Element__
 
 	constructor(elem: HTMLImageElement, srcIsLazy: boolean = true)
 	{
-		this.elem = elem;
+		this.elem = new __TypeValidator__(elem)
+			.expectTag()
+			.validate();
 
 		this.imgSrc = {
 			high: this.catchAttr("high", !srcIsLazy),
@@ -154,7 +156,7 @@ class __LLI_Element__
 			delete this.elem.dataset[ ATTR as keyof DOMStringMap ];
 	}
 
-	private toggleSrc(src: string, isHigh: boolean = false): void
+	private toggleSrc(src: string): void
 	{
 		if(this.elem.src !== src)
 			this.elem.src = src;
