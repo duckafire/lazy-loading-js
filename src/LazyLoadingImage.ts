@@ -38,7 +38,7 @@ class __TypeValidator__
 		const TYPE = typeof this.value;
 
 		return this.expectStuff(
-			(TYPE !== t),
+			(t === "array" ? Array.isArray(t) : TYPE !== t),
 			`Expecting type "${t}", instead "${TYPE}".`,
 		);
 	}
