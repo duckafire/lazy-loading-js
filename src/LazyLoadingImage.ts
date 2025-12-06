@@ -65,7 +65,7 @@ class __TypeValidator__
 		return this;
 	}
 
-	validate(): unknown
+	validate(): any
 	{
 		if(this.validValue)
 			return this.value;
@@ -133,7 +133,7 @@ class __LLI_Element__
 
 	useHigh(highClasses: string[], lazyClasses: string[]): void
 	{
-		this.toggleSrc( this.imgSrc.high, true );
+		this.toggleSrc( this.imgSrc.high );
 		this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
 		this.toggleStyle( lazyClasses, highClasses );
 	}
@@ -143,6 +143,13 @@ class __LLI_Element__
 		this.toggleSrc( this.imgSrc.high );
 		this.toggleStyle( this.styleClasses.high, this.styleClasses.lazy );
 		this.toggleStyle( highClasses, lazyClasses );
+	}
+
+	preparateToBeObserved(id: number): HTMLImageElement
+	{
+		// Lazy Library Image InDex
+		this.elem.dataset.lliId = id.toString();
+		return this.elem;
 	}
 
 	private catchAttr(field: string, useSrc: boolean = false): string
