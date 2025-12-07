@@ -133,14 +133,18 @@ class __LLI_Element__
 
 	useHigh(highClasses: string[], lazyClasses: string[]): void
 	{
-		this.toggleSrc( this.imgSrc.high );
+		if(!this.toggleSrc( this.imgSrc.high ))
+			return;
+
 		this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
 		this.toggleStyle( lazyClasses, highClasses );
 	}
 
 	useLazy(highClasses: string[], lazyClasses: string[]): void
 	{
-		this.toggleSrc( this.imgSrc.high );
+		if(!this.toggleSrc( this.imgSrc.high ))
+			return;
+
 		this.toggleStyle( this.styleClasses.high, this.styleClasses.lazy );
 		this.toggleStyle( highClasses, lazyClasses );
 	}
@@ -163,10 +167,18 @@ class __LLI_Element__
 			delete this.elem.dataset[ ATTR as keyof DOMStringMap ];
 	}
 
-	private toggleSrc(src: string): void
+	private toggleSrc(src: string): boolean
 	{
 		if(this.elem.src !== src)
+		{
 			this.elem.src = src;
+
+			// processed
+			return true;
+		}
+
+		// not-processed
+		return false;
 	}
 
 	private toggleStyle(toAdd: string[], toRmv: string[]): void
