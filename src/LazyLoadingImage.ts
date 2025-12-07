@@ -131,17 +131,20 @@ class __LLI_Element__
 		this.clearElemAttr();
 	}
 
-	useHigh(highClasses: string[], lazyClasses: string[]): void
+	useSrc(origin: string, highClasses: string[], lazyClasses: string[]): void
 	{
-		if(!this.toggleSrc( this.imgSrc.high ))
-			return;
+		if(origin === "high")
+		{
+			if(!this.toggleSrc( this.imgSrc.high ))
+				return;
 
-		this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
-		this.toggleStyle( lazyClasses, highClasses );
-	}
+			this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
+			this.toggleStyle( lazyClasses, highClasses );
+		}
 
-	useLazy(highClasses: string[], lazyClasses: string[]): void
-	{
+		if(origin !== "lazy")
+			throw new Error(`Invalid origin: "${origin}"`);
+
 		if(!this.toggleSrc( this.imgSrc.high ))
 			return;
 
@@ -163,8 +166,10 @@ class __LLI_Element__
 
 	private clearElemAttr(): void
 	{
-		for(const ATTR of ["high", "lazy", "styleHigh", "styleLazy"])
-			delete this.elem.dataset[ ATTR as keyof DOMStringMap ];
+		delete this.elem.dataset.high,
+			   this.elem.dataset.lazy,
+			   this.elem.dataset.styleHigh,
+			   this.elem.dataset.styleLazy;
 	}
 
 	private toggleSrc(src: string): boolean
@@ -191,7 +196,7 @@ class __LLI_Element__
 	}
 };
 
-class __LLI_ElementGroup__
+class __LLI_ElementsGroup__
 {
 	private readonly query: string;
 	private readonly srcIsLazy: boolean;
@@ -221,6 +226,15 @@ class __LLI_ElementGroup__
 		{
 			watcher.observe( elem.preparateToBeObserved( groupPositionId ) );
 		});
+	}
+
+	useSrc(id: number, origin: string): any
+	{
+		this.elements[ id ].useSrc(
+			origin,
+			this.styleClasses.high,
+			this.styleClasses.lazy
+		);
 	}
 
 	private catchStyleClasses(storage: string[]): string[]
