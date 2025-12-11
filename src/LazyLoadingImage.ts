@@ -20,6 +20,26 @@
  * 3. This notice may not be removed or altered from any source distribution.
  * */
 
+interface IImgSrc
+{
+	high: string;
+	lazy: string;
+};
+
+interface IStyleClasses
+{
+	high: string[];
+	lazy: string[];
+};
+
+interface IIntersectionObserverOptions
+{
+	root: HTMLElement,
+	rootMargin: string,
+	scrollMargin: string,
+	threshold: number | number[],
+}
+
 class __TypeValidator__
 {
 	private value: unknown = null;
@@ -46,7 +66,7 @@ class __TypeValidator__
 	expectTag(): __TypeValidator__
 	{
 		return this.expectStuff(
-			(this.value instanceof HTMLImageElement),
+			(this.value instanceof HTMLElement),
 			`Expecting instance of "HTMLElement", instead "${(this.value as Function).constructor.name}".`,
 		);
 	}
@@ -93,18 +113,6 @@ class __TypeValidator__
 };
 
 // LLI === Lazy Loading Image
-
-interface IImgSrc
-{
-	high: string;
-	lazy: string;
-};
-
-interface IStyleClasses
-{
-	high: string[];
-	lazy: string[];
-};
 
 class __LLI_Element__
 {
@@ -248,3 +256,59 @@ class __LLI_ElementsGroup__
 		return storage;
 	}
 };
+
+class __LLI_Observer__
+{
+	private readonly api: IntersectionObserver;
+	private readonly elementsGroup: __LLI_ElementsGroup__;
+	private readonly options: IIntersectionObserverOptions;
+
+	constructor(options: IIntersectionObserverOptions, elementsGroup: __LLI_ElementsGroup__)
+	{
+		const THRESHOLD: number | number[] = (
+			Array.isArray(options.threshold)
+			? new __TypeValidator__(options.threshold).expectType("number").fallback(1.0).validate()
+			: this.validateThresholdArrayOpt( (options.threshold as unknown) as number[] )
+		);
+
+		this.options = {
+			root:         new __TypeValidator__(options.root).expectTag().fallback(null).validate(),
+			rootMargin:   new __TypeValidator__(options.rootMargin).expectType("string").fallback("0px").validate(),
+			scrollMargin: new __TypeValidator__(options.scrollMargin).expectType("string").fallback("0px").validate(),
+			threshold:    THRESHOLD,
+		};
+
+		this.api = new IntersectionObserver( this.algorithm(), this.options );
+		this.elementsGroup = elementsGroup;
+	}
+
+	useSrc(entry: IntersectionObserverEntry, origin: string): void
+	{
+		this.elementsGroup.useSrc(
+			parseInt( (entry.target as HTMLElement).dataset.lliId ),
+			origin
+		);
+	}
+
+	private validateThresholdArrayOpt(thresholdOpt: number[]): number[]
+	{
+		for(const ITEM of thresholdOpt)
+			new __TypeValidator__( ITEM ).expectType("number").validate();
+
+		return thresholdOpt;
+	}
+
+	private algorithm()
+	{
+		return (entries: IntersectionObserverEntry[]) =>
+		{
+			entries.forEach((entry: IntersectionObserverEntry) =>
+			{
+				if(entry.isIntersecting)
+					this.useSrc(entry, "high");
+				else
+					this.useSrc(entry, "lazy");
+			});
+		};
+	}
+}
