@@ -34,19 +34,21 @@ interface IStyleClasses
 
 interface IIntersectionObserverOptions
 {
-	root: HTMLElement,
-	rootMargin: string,
-	scrollMargin: string,
-	threshold: number | number[],
-}
-
-interface ILazyLoadingImageOptions
-{
 	// All they are optional because I
 	// do not want to have to create an
 	// object to satisfy the compiler every
 	// time when I use this interface in
 	// optional parameters.
+	root?: HTMLElement,
+	rootMargin?: string,
+	scrollMargin?: string,
+	threshold?: number | number[],
+}
+
+interface ILazyLoadingImageOptions
+{
+	// Read the NOTE in the
+	// interface above.
 	observerOptions?: IIntersectionObserverOptions;
 	styleClasses?: IStyleClasses;
 	srcIsLazy?: boolean;
@@ -56,6 +58,7 @@ class __TypeValidator__
 {
 	private value: unknown = null;
 	private fallbackValue: unknown = null;
+	private fallbackNull: unknown = {};
 	private exceptionMessage: string = "A type error occur.";
 	private validValue: boolean = false;
 	private safe: boolean = false;
@@ -63,6 +66,7 @@ class __TypeValidator__
 	constructor(v: unknown)
 	{
 		this.value = v;
+		this.fallbackValue = this.fallbackNull;
 	}
 
 	expectType(t: string): __TypeValidator__
@@ -70,7 +74,7 @@ class __TypeValidator__
 		const TYPE = typeof this.value;
 
 		return this.expectStuff(
-			(t === "array" ? Array.isArray(t) : TYPE !== t),
+			(t === "array" ? Array.isArray(this.value) : TYPE === t),
 			`Expecting type "${t}", instead "${TYPE}".`,
 		);
 	}
@@ -79,7 +83,7 @@ class __TypeValidator__
 	{
 		return this.expectStuff(
 			(this.value instanceof HTMLElement),
-			`Expecting instance of "HTMLElement", instead "${(this.value as Function).constructor.name}".`,
+			`Expecting instance of "HTMLElement", instead "${!this.value ? this.value : (this.value as Function).constructor.name}".`,
 		);
 	}
 
@@ -102,7 +106,7 @@ class __TypeValidator__
 		if(this.validValue)
 			return this.value;
 
-		if(this.fallbackValue !== null)
+		if(this.fallbackValue !== this.fallbackNull)
 			return this.fallbackValue;
 
 		if(!this.safe)
@@ -134,9 +138,7 @@ class __LLI_Element__
 
 	constructor(elem: HTMLImageElement, srcIsLazy: boolean = true)
 	{
-		this.elem = new __TypeValidator__(elem)
-			.expectTag()
-			.validate();
+		this.elem = new __TypeValidator__(elem).expectTag().validate();
 
 		this.imgSrc = {
 			high: this.catchAttr("high", !srcIsLazy),
@@ -259,7 +261,7 @@ class __LLI_ElementsGroup__
 
 	private catchStyleClasses(storage: string[]): string[]
 	{
-		if(storage === null)
+		if(!storage)
 			return null;
 
 		for(const CLASS of new __TypeValidator__(storage).expectType("array").validate())
@@ -304,6 +306,9 @@ class __LLI_Observer__
 
 	private validateThresholdArrayOpt(thresholdOpt: number[]): number[]
 	{
+		if(!thresholdOpt)
+			return null;
+
 		for(const ITEM of thresholdOpt)
 			new __TypeValidator__( ITEM ).expectType("number").validate();
 
@@ -339,7 +344,7 @@ class LazyLoadingImage
 		);
 
 		this.observer = new __LLI_Observer__(
-			options.observerOptions,
+			options.observerOptions || {},
 			this.elementsGroup,
 		);
 	}
