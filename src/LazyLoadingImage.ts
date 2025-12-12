@@ -181,6 +181,11 @@ class __LLI_Element__
 		return this.elem;
 	}
 
+	get(): HTMLImageElement
+	{
+		return this.elem;
+	}
+
 	private catchAttr(field: string, useSrc: boolean = false): string
 	{
 		return this.elem.dataset[ field ] ?? (useSrc ? this.elem.src : null);
@@ -259,6 +264,12 @@ class __LLI_ElementsGroup__
 		);
 	}
 
+	forEach(lambda: any): void
+	{
+		for(const ELEM of this.elements)
+			lambda( ELEM.get() );
+	}
+
 	private catchStyleClasses(storage: string[]): string[]
 	{
 		if(!storage)
@@ -287,13 +298,14 @@ class __LLI_Observer__
 
 		this.options = {
 			root:         new __TypeValidator__(options.root).expectTag().fallback(null).validate(),
-			rootMargin:   new __TypeValidator__(options.rootMargin).expectType("string").fallback("0px").validate(),
-			scrollMargin: new __TypeValidator__(options.scrollMargin).expectType("string").fallback("0px").validate(),
+			rootMargin:   new __TypeValidator__(options.rootMargin).expectType("string").fallback("0px 0px 0px 0px").validate(),
+			scrollMargin: new __TypeValidator__(options.scrollMargin).expectType("string").fallback("0px 0px 0px 0px").validate(),
 			threshold:    THRESHOLD,
 		};
 
 		this.api = new IntersectionObserver( this.algorithm(), this.options );
 		this.elementsGroup = elementsGroup;
+		this.observeElements();
 	}
 
 	useSrc(entry: IntersectionObserverEntry, origin: string): void
@@ -315,7 +327,7 @@ class __LLI_Observer__
 		return thresholdOpt;
 	}
 
-	private algorithm()
+	private algorithm(): any
 	{
 		return (entries: IntersectionObserverEntry[]) =>
 		{
@@ -327,6 +339,14 @@ class __LLI_Observer__
 					this.useSrc(entry, "lazy");
 			});
 		};
+	}
+
+	private observeElements(): void
+	{
+		this.elementsGroup.forEach((elem: HTMLElement) =>
+		{
+			this.api.observe(elem);
+		});
 	}
 }
 
