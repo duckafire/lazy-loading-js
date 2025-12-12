@@ -24,13 +24,13 @@ interface IImgSrc
 {
 	high: string;
 	lazy: string;
-};
+}
 
 interface IStyleClasses
 {
 	high: string[];
 	lazy: string[];
-};
+}
 
 interface IIntersectionObserverOptions
 {
@@ -38,6 +38,18 @@ interface IIntersectionObserverOptions
 	rootMargin: string,
 	scrollMargin: string,
 	threshold: number | number[],
+}
+
+interface ILazyLoadingImageOptions
+{
+	// All they are optional because I
+	// do not want to have to create an
+	// object to satisfy the compiler every
+	// time when I use this interface in
+	// optional parameters.
+	observerOptions?: IIntersectionObserverOptions;
+	styleClasses?: IStyleClasses;
+	srcIsLazy?: boolean;
 }
 
 class __TypeValidator__
@@ -110,7 +122,7 @@ class __TypeValidator__
 		this.exceptionMessage = exMessage;
 		return this;
 	}
-};
+}
 
 // LLI === Lazy Loading Image
 
@@ -202,7 +214,7 @@ class __LLI_Element__
 		if(toAdd !== null)
 			this.elem.classList.add(    ...toAdd );
 	}
-};
+}
 
 class __LLI_ElementsGroup__
 {
@@ -211,14 +223,14 @@ class __LLI_ElementsGroup__
 	private readonly styleClasses: IStyleClasses;
 	private readonly elements: __LLI_Element__[];
 
-	constructor(query: string, srcIsLazy: boolean, highClasses: string[], lazyClasses: string[])
+	constructor(query: string, srcIsLazy: boolean, styleClasses: IStyleClasses)
 	{
 		this.query     = new __TypeValidator__(query).expectType("string").validate();
 		this.srcIsLazy = srcIsLazy;
 
 		this.styleClasses = {
-			high: this.catchStyleClasses( highClasses ),
-			lazy: this.catchStyleClasses( lazyClasses ),
+			high: this.catchStyleClasses( styleClasses.high ),
+			lazy: this.catchStyleClasses( styleClasses.lazy ),
 		};
 
 		this.elements = [];
@@ -255,7 +267,7 @@ class __LLI_ElementsGroup__
 
 		return storage;
 	}
-};
+}
 
 class __LLI_Observer__
 {
@@ -310,5 +322,25 @@ class __LLI_Observer__
 					this.useSrc(entry, "lazy");
 			});
 		};
+	}
+}
+
+class LazyLoadingImage
+{
+	private readonly observer;
+	private readonly elementsGroup;
+
+	constructor(query: string, options: ILazyLoadingImageOptions = {})
+	{
+		this.elementsGroup = new __LLI_ElementsGroup__(
+			query,
+			options.srcIsLazy,
+			options.styleClasses,
+		);
+
+		this.observer = new __LLI_Observer__(
+			options.observerOptions,
+			this.elementsGroup,
+		);
 	}
 }
