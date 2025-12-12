@@ -24,8 +24,8 @@
     "url": "git+https://github.com/duckafire/lazy-loading-js.git"
   },
   "scripts": {
-    "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; done",
-    "build": "npx tsc && npm run minify"
+    "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; rm \"$file\"; done",
+    "build": "rm -r ./dist && npx tsc && npm run minify"
   },
   "files": [
     "LICENSE",
