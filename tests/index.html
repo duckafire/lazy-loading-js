@@ -2,49 +2,52 @@
 <html>
 <head>
 	<title>Lazy loading js - test</title>
-	<script src="../src/LazyLoadingImage.js"></script>
-	<!-- <script src="https://cdn.jsdelivr.net/npm/@duckafire/lazy-loading-js@2.0.2/src/LazyLoadingImage.js"></script> -->
+	<!-- <script src="../src/LazyLoadingImage.ts"></script> -->
 	<style>
-		* {
-			inset: 0;
-			padding: 0;
-			margin: 0;
-		}
-		body {
-			width: 100vw;
-			height: 300dvh;
-			background-color: #111;
-			color: #ccc;
-			padding-top: 10dvh;
-		}
-		#container {
-			width: 100%;
-			height: max-content;
-			display: grid;
-			grid-template-columns: repeat(3, 1fr);
-			row-gap: 200dvh;
-			place-items: center;
-		}
-		#container img {
-			width: 200px;
-		}
+		* { padding: 0; margin: 0; box-sizing: border-box; }
+		body { width: 100vw; background-color: #1f1f1f; color: #c9c9c9; padding-block: 5vh; padding-inline: 2.5vw; }
+		.hr { position: relative; width: 100%; height: 150vh; height: 150dvh; background-color: var(--bg); display: block; margin-block: 2.5vh; margin-block: 2.5dvh; }
+		.hr::before { content: attr(data-id); top: 0; left: 0; position: relative; padding: 1rem; font-size: 2rem; display: block; }
+		.container { width: 100%; text-align: center; }
+		.pixel-blur { -ms-interpolation-mode: nearest-neighbor; image-rendering: crisp-edges; image-rendering: pixelated; }
+		.black-white { filter: saturate(0); }
+		.outline { outline: 1px solid white; }
 	</style>
 </head>
 <body>
-	<div id="container">
-		<img src="./images/quick-brown-fox-original.jpg"/>
-		<img src="./images/quick-brown-fox-placeholder.jpg"/>
-		<img class="foo"
-			data-src="./images/quick-brown-fox-original.jpg"
-			data-placeholder="./images/quick-brown-fox-placeholder.jpg"/>
-		<img src="./images/lazy-dog-original.jpg"/>
-		<img src="./images/lazy-dog-placeholder.jpg"/>
-		<img class="foo"
-			data-src="./images/lazy-dog-original.jpg"
-			data-placeholder="./images/lazy-dog-placeholder.jpg"/>
+	<div class="container">
+		<img class="image" width="550px" src="./images/lazy/quick-brown-fox.jpg" alt=" "
+			data-high="./images/high/quick-brown-fox.jpg"
+		/>
+	</div>
+	<span class="hr" style="--bg:#7a3a3a" data-id="0"></span>
+	<div class="container">
+		<img class="image" width="550px" src="./images/lazy/lazy-dog.jpg" alt=" "
+			data-high="./images/high/lazy-dog.jpg"
+			data-style-lazy="pixel-blur"
+		/>
+	</div>
+	<span class="hr" style="--bg:#3a7a3a" data-id="1"></span>
+	<div class="container">
+		<img class="image" width="550px" src="./images/lazy/quick-brown-fox.jpg" alt=" "
+			data-high="./images/high/quick-brown-fox.jpg"
+			data-style-high="black-white"
+		/>
+	</div>
+	<span class="hr" style="--bg:#3a3a7a" data-id="2"></span>
+	<div class="container">
+		<img class="image" width="550px" src="./images/lazy/lazy-dog.jpg" alt=" "
+			data-high="./images/high/lazy-dog.jpg"
+			data-style-lazy="pixel-blur,black-white"
+		/>
 	</div>
 </body>
 <script>
-	const lazies = new LazyLoadingImage(".foo");
+	const OPT = {
+		styleClasses: {
+			high: ["outline"],
+		},
+	};
+	//const LLI = new LazyLoadingImage(".image", OPT);
 </script>
 </html>
