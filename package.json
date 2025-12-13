@@ -25,6 +25,7 @@
   },
   "scripts": {
     "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; rm \"$file\"; done",
+    "test": "npx tsc",
     "_build": "rm -r ./dist && npx tsc && npm run minify",
     "build": "npm run _build --silent"
   },
