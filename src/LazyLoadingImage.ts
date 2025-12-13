@@ -135,6 +135,8 @@ class __LLI_Element__
 	private readonly elem: HTMLImageElement;
 	private readonly imgSrc: IImgSrc;
 	private readonly styleClasses: IStyleClasses;
+	private readonly viewStatusList: any;
+	private viewStatus: number;
 
 	constructor(elem: HTMLImageElement, srcIsLazy: boolean = true)
 	{
@@ -146,9 +148,16 @@ class __LLI_Element__
 		};
 
 		this.styleClasses = {
-			high: (this.catchAttr("styleHigh", !srcIsLazy)?.split(",")) || null,
-			lazy: (this.catchAttr("styleLazy",  srcIsLazy)?.split(",")) || null,
+			high: (this.catchAttr("styleHigh", false)?.split(",")) || null,
+			lazy: (this.catchAttr("styleLazy", false)?.split(",")) || null,
 		};
+
+		this.viewStatusList = {
+			NULL: -1,
+			HIGH:  0,
+			LAZY:  1,
+		};
+		this.viewStatus = this.viewStatusList.NULL;
 
 		this.clearElemAttr();
 	}
@@ -157,17 +166,18 @@ class __LLI_Element__
 	{
 		if(origin === "high")
 		{
-			if(!this.toggleSrc( this.imgSrc.high ))
+			if(!this.toggleSrc( this.imgSrc.high, this.viewStatusList.HIGH ))
 				return;
 
 			this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
 			this.toggleStyle( lazyClasses, highClasses );
+			return;
 		}
 
 		if(origin !== "lazy")
 			throw new Error(`Invalid origin: "${origin}"`);
 
-		if(!this.toggleSrc( this.imgSrc.high ))
+		if(!this.toggleSrc( this.imgSrc.high, this.viewStatusList.LAZY ))
 			return;
 
 		this.toggleStyle( this.styleClasses.high, this.styleClasses.lazy );
@@ -199,10 +209,11 @@ class __LLI_Element__
 			   this.elem.dataset.styleLazy;
 	}
 
-	private toggleSrc(src: string): boolean
+	private toggleSrc(src: string, status: unknown): boolean
 	{
-		if(this.elem.src !== src)
+		if(this.viewStatus !== status)
 		{
+			this.viewStatus = status as number;
 			this.elem.src = src;
 
 			// processed
@@ -247,11 +258,11 @@ class __LLI_ElementsGroup__
 		});
 	}
 
-	startToObserve(watcher: IntersectionObserver)
+	startToObserve(api: IntersectionObserver)
 	{
 		this.elements.forEach((elem: __LLI_Element__, groupPositionId: number): void =>
 		{
-			watcher.observe( elem.preparateToBeObserved( groupPositionId ) );
+			api.observe( elem.preparateToBeObserved( groupPositionId ) );
 		});
 	}
 
@@ -262,12 +273,6 @@ class __LLI_ElementsGroup__
 			this.styleClasses.high,
 			this.styleClasses.lazy
 		);
-	}
-
-	forEach(lambda: any): void
-	{
-		for(const ELEM of this.elements)
-			lambda( ELEM.get() );
 	}
 
 	private catchStyleClasses(storage: string[]): string[]
@@ -343,10 +348,7 @@ class __LLI_Observer__
 
 	private observeElements(): void
 	{
-		this.elementsGroup.forEach((elem: HTMLElement) =>
-		{
-			this.api.observe(elem);
-		});
+		this.elementsGroup.startToObserve( this.api );
 	}
 }
 
