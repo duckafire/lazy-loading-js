@@ -20,6 +20,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  * */
 
+// LLI === Lazy Loading Image
+
 interface IImgSrc
 {
 	high: string;
@@ -32,342 +34,358 @@ interface IStyleClasses
 	lazy: string[];
 }
 
-interface IIntersectionObserverOptions
+// I Intersection Observer Options
+interface IIOOptions
 {
-	// All they are optional because I
-	// do not want to have to create an
-	// object to satisfy the compiler every
-	// time when I use this interface in
-	// optional parameters.
-	root?: HTMLElement,
-	rootMargin?: string,
-	scrollMargin?: string,
-	threshold?: number | number[],
+	root: HTMLElement;
+	rootMargin: string;
+	scrollMargin: string;
+	threshold: number | number[];
 }
 
-interface ILazyLoadingImageOptions
+interface IStartToObserve
 {
-	// Read the NOTE in the
-	// interface above.
-	observerOptions?: IIntersectionObserverOptions;
-	styleClasses?: IStyleClasses;
-	srcIsLazy?: boolean;
+	startToObserve: (api?: IntersectionObserver) => void;
 }
 
-class __TypeValidator__
+interface ILLIOptions
 {
-	private value: unknown = null;
-	private fallbackValue: unknown = null;
-	private fallbackNull: unknown = {};
+	styleClasses: IStyleClasses;
+	observerOptions: IIOOptions;
+	useSrcAsFallbackToLazySrc: boolean;
+}
+
+
+const __LLI_ElemStatus__ = Object.freeze({
+	NULL: 0,
+	HIGH: 1,
+	LAZY: 2,
+} as const);
+
+const __LLI_SrcGroup__ = Object.freeze({
+	HIGH: "high",
+	LAZY: "lazy",
+} as const);
+
+type TElemStatus = typeof __LLI_ElemStatus__[keyof typeof __LLI_ElemStatus__];
+type TSrcGroup   = typeof __LLI_SrcGroup__[  keyof typeof __LLI_SrcGroup__  ];
+
+
+abstract class __LLI_UseSrc__<T extends IStyleClasses | number | IntersectionObserverEntry>
+{
+	abstract useSrc(T, group: TSrcGroup): void;
+}
+
+
+// Type Validator
+class __LLI_TV__
+{
+	private readonly value: unknown;
+	private fallbackValue: unknown;
+	private isValidValue: boolean;
+
+	// default message
 	private exceptionMessage: string = "A type error occur.";
-	private validValue: boolean = false;
-	private safe: boolean = false;
 
 	constructor(v: unknown)
 	{
+		this.isUndef(v);
 		this.value = v;
-		this.fallbackValue = this.fallbackNull;
 	}
 
-	expectType(t: string): __TypeValidator__
+	expect(t: string | Function): this
 	{
-		const TYPE = typeof this.value;
+		this.isExpAlreadyDefined();
+		this.isUndef(t);
+		const T_TYPE = typeof t;
 
-		return this.expectStuff(
-			(t === "array" ? Array.isArray(this.value) : TYPE === t),
-			`Expecting type "${t}", instead "${TYPE}".`,
-		);
+		if(T_TYPE === "string")
+		{
+			const VALUE_TYPE = typeof this.value;
+
+			this.isValidValue     = (t === "array" ? Array.isArray(this.value) : VALUE_TYPE === t);
+			this.exceptionMessage = `Expecting type "${t}", instead "${VALUE_TYPE}".`;
+			return this;
+		}
+
+		if(T_TYPE !== "function")
+			throw new TypeError(`Expecting constructor, instead "${T_TYPE}".`);
+
+		// Using `any` to avoid an
+		// unnecessary verbosity.
+		this.isValidValue     = (this.value instanceof HTMLImageElement);
+		this.exceptionMessage = `Expecting instance or heir of \`${(t as any).constructor.name}\`, instead \`${((this.value as any)?.constructor)?.name}\`.`;
+		return this;
 	}
 
-	expectTag(): __TypeValidator__
+	fallback(v: unknown): this
 	{
-		return this.expectStuff(
-			(this.value instanceof HTMLElement),
-			`Expecting instance of "HTMLElement", instead "${!this.value ? this.value : (this.value as Function).constructor.name}".`,
-		);
-	}
+		if(this.fallback !== undefined)
+			throw new SyntaxError("Fallback already defined.");
 
-	fallback(v: unknown): __TypeValidator__
-	{
-		// It, indirectly, enables
-		// "safe mode".
+		this.isUndef(v);
 		this.fallbackValue = v;
 		return this;
 	}
 
-	noException(): __TypeValidator__
+	val(): any
 	{
-		this.safe = true;
-		return this;
-	}
+		if(this.isValidValue === undefined)
+			throw new SyntaxError("Expected value not defined.");
 
-	validate(): any
-	{
-		if(this.validValue)
+		if(this.isValidValue)
 			return this.value;
 
-		if(this.fallbackValue !== this.fallbackNull)
+		if(this.fallbackValue !== undefined)
 			return this.fallbackValue;
 
-		if(!this.safe)
-			throw new TypeError( this.exceptionMessage );
-
-		return null;
-	}
-	
-	onlyValidate(): boolean
-	{
-		return this.validValue
+		throw new TypeError( this.exceptionMessage );
 	}
 
-	private expectStuff(condit: boolean, exMessage: string): __TypeValidator__
+	private isUndef(s: unknown): void
 	{
-		this.validValue = condit;
-		this.exceptionMessage = exMessage;
-		return this;
+		if(s === undefined)
+			throw new TypeError("`undefined` is invalid.");
+	}
+
+	private isExpAlreadyDefined(): void
+	{
+		if(this.isValidValue !== undefined)
+			throw new SyntaxError("Expected value already defined.");
 	}
 }
 
-// LLI === Lazy Loading Image
 
-class __LLI_Element__
+class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
 {
 	private readonly elem: HTMLImageElement;
 	private readonly imgSrc: IImgSrc;
 	private readonly styleClasses: IStyleClasses;
-	private readonly viewStatusList: any;
-	private viewStatus: number;
 
-	constructor(elem: HTMLImageElement, srcIsLazy: boolean = true)
+	private status: TElemStatus = __LLI_ElemStatus__.NULL;
+
+	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean = false)
 	{
-		this.elem = new __TypeValidator__(elem).expectTag().validate();
+		super();
+		this.elem = (new __LLI_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
 
 		this.imgSrc = {
-			high: this.catchAttr("high", !srcIsLazy),
-			lazy: this.catchAttr("lazy",  srcIsLazy),
+			high: this.catchSrc(__LLI_SrcGroup__.HIGH, !useSrcAsFallbackToLazySrc),
+			lazy: this.catchSrc(__LLI_SrcGroup__.LAZY,  useSrcAsFallbackToLazySrc),
 		};
 
 		this.styleClasses = {
-			high: (this.catchAttr("styleHigh", false)?.split(",")) || null,
-			lazy: (this.catchAttr("styleLazy", false)?.split(",")) || null,
+			high: this.catchStyles(__LLI_SrcGroup__.HIGH),
+			lazy: this.catchStyles(__LLI_SrcGroup__.LAZY),
 		};
 
-		this.viewStatusList = {
-			NULL: -1,
-			HIGH:  0,
-			LAZY:  1,
-		};
-		this.viewStatus = this.viewStatusList.NULL;
-
-		this.clearElemAttr();
+		this.clearBootAttr();
 	}
 
-	useSrc(origin: string, highClasses: string[], lazyClasses: string[]): void
+	useSrc(styleClasses: IStyleClasses, group: TSrcGroup)
 	{
-		if(origin === "high")
+		if(group === __LLI_SrcGroup__.HIGH)
 		{
-			if(!this.toggleSrc( this.imgSrc.high, this.viewStatusList.HIGH ))
-				return;
+			if(this.toggleSrc( __LLI_ElemStatus__.HIGH, this.imgSrc.high ))
+				this.toggleStyles( __LLI_ElemStatus__.HIGH, styleClasses );
 
-			this.toggleStyle( this.styleClasses.lazy, this.styleClasses.high );
-			this.toggleStyle( lazyClasses, highClasses );
 			return;
 		}
 
-		if(origin !== "lazy")
-			throw new Error(`Invalid origin: "${origin}"`);
+		if(group !== __LLI_SrcGroup__.LAZY)
+			throw new SyntaxError(`Invalid source group: "${group}".`);
 
-		if(!this.toggleSrc( this.imgSrc.high, this.viewStatusList.LAZY ))
-			return;
-
-		this.toggleStyle( this.styleClasses.high, this.styleClasses.lazy );
-		this.toggleStyle( highClasses, lazyClasses );
+		if(this.toggleSrc( __LLI_ElemStatus__.LAZY, this.imgSrc.lazy ))
+			this.toggleStyles( __LLI_ElemStatus__.LAZY, styleClasses );
 	}
 
-	preparateToBeObserved(id: number): HTMLImageElement
+	setGroupIndex(id: number): void
 	{
-		// Lazy Library Image InDex
-		this.elem.dataset.lliId = id.toString();
-		return this.elem;
+		this.elem.dataset.llId = id.toString();
 	}
 
-	get(): HTMLImageElement
+	getAsHTMLImg(): HTMLImageElement
 	{
 		return this.elem;
 	}
 
-	private catchAttr(field: string, useSrc: boolean = false): string
+	private catchSrc(attr: TSrcGroup, srcAsFallback: boolean): string
 	{
-		return this.elem.dataset[ field ] ?? (useSrc ? this.elem.src : null);
+		return this.elem.dataset[ attr ] || (srcAsFallback ? this.elem.src : null);
 	}
 
-	private clearElemAttr(): void
+	private catchStyles(group: TSrcGroup): string[]
+	{
+		return (this.elem.getAttribute( "data-style-" + group )?.split(",")) || null;
+	}
+
+	private clearBootAttr(): void
 	{
 		delete this.elem.dataset.high,
-			   this.elem.dataset.lazy,
-			   this.elem.dataset.styleHigh,
-			   this.elem.dataset.styleLazy;
+				this.elem.dataset.lazy,
+				this.elem.dataset.styleHigh,
+				this.elem.dataset.styleLazy;
 	}
 
-	private toggleSrc(src: string, status: unknown): boolean
+	private toggleSrc(status: TElemStatus, src: string): boolean
 	{
-		if(this.viewStatus !== status)
-		{
-			this.viewStatus = status as number;
-			this.elem.src = src;
+		if(this.status === status)
+			return false;
 
-			// processed
-			return true;
+		this.status = status;
+		this.elem.src = src;
+		return true;
+	}
+
+	private toggleStyles(status: TElemStatus, externStyleClasses: IStyleClasses): void
+	{
+		this.toggleIndieStyles( status, externStyleClasses );
+		this.toggleIndieStyles( status, this.styleClasses );
+	}
+
+	private toggleIndieStyles(status: TElemStatus, styles: IStyleClasses): void
+	{
+		let rmv = styles.lazy;
+		let add = styles.high;
+
+		if(status === __LLI_ElemStatus__.LAZY)
+		{
+			rmv = styles.high;
+			add = styles.lazy;
 		}
 
-		// not-processed
-		return false;
-	}
+		if(rmv !== null)
+			this.elem.classList.remove( ...rmv )
 
-	private toggleStyle(toAdd: string[], toRmv: string[]): void
-	{
-		if(toRmv !== null)
-			this.elem.classList.remove( ...toRmv );
-
-		if(toAdd !== null)
-			this.elem.classList.add(    ...toAdd );
+		if(add !== null)
+			this.elem.classList.add( ...add );
 	}
 }
 
-class __LLI_ElementsGroup__
+class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToObserve
 {
-	private readonly query: string;
-	private readonly srcIsLazy: boolean;
 	private readonly styleClasses: IStyleClasses;
-	private readonly elements: __LLI_Element__[];
 
-	constructor(query: string, srcIsLazy: boolean, styleClasses: IStyleClasses)
+	private elements: __LLI_Element__[] = [];
+
+	constructor(query: string, useSrcAsFallbackToLazySrc: boolean, style: IStyleClasses)
 	{
-		this.query     = new __TypeValidator__(query).expectType("string").validate();
-		this.srcIsLazy = srcIsLazy;
-
+		super();
 		this.styleClasses = {
-			high: this.catchStyleClasses( styleClasses.high ),
-			lazy: this.catchStyleClasses( styleClasses.lazy ),
+			high: this.valStyle( style.high ),
+			lazy: this.valStyle( style.lazy ),
 		};
 
-		this.elements = [];
-		document.querySelectorAll( this.query ).forEach((elem: unknown): void =>
-		{
-			this.elements.push( new __LLI_Element__(elem as HTMLImageElement, this.srcIsLazy) );
-		});
-	}
-
-	startToObserve(api: IntersectionObserver)
-	{
-		this.elements.forEach((elem: __LLI_Element__, groupPositionId: number): void =>
-		{
-			api.observe( elem.preparateToBeObserved( groupPositionId ) );
-		});
-	}
-
-	useSrc(id: number, origin: string): any
-	{
-		this.elements[ id ].useSrc(
-			origin,
-			this.styleClasses.high,
-			this.styleClasses.lazy
+		this.catchElements(
+			new __LLI_TV__(query).expect("string").val(),
+			useSrcAsFallbackToLazySrc,
 		);
 	}
 
-	private catchStyleClasses(storage: string[]): string[]
+	useSrc(elemId: number, group: TSrcGroup)
 	{
-		if(!storage)
+		this.elements[ elemId ].useSrc( this.styleClasses, group );
+	}
+
+	startToObserve(api: IntersectionObserver): void
+	{
+		this.elements.forEach((elem: __LLI_Element__, id: number): void =>
+		{
+			elem.setGroupIndex( id );
+			api.observe( elem.getAsHTMLImg() );
+		});
+	}
+
+	private valStyle(group: string[]): string[]
+	{
+		if(!group)
 			return null;
 
-		for(const CLASS of new __TypeValidator__(storage).expectType("array").validate())
-			new __TypeValidator__(CLASS).expectType("string").validate();
+		for(const CLASS of group)
+			new __LLI_TV__(CLASS).expect("string").val();
 
-		return storage;
+		return group;
+	}
+
+	private catchElements(query: string, useSrc: boolean): void
+	{
+		document.querySelectorAll( query ).forEach((elem: unknown): void =>
+		{
+			this.elements.push( new __LLI_Element__((elem as HTMLImageElement), useSrc) );
+		});
 	}
 }
 
-class __LLI_Observer__
+class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> implements IStartToObserve
 {
 	private readonly api: IntersectionObserver;
 	private readonly elementsGroup: __LLI_ElementsGroup__;
-	private readonly options: IIntersectionObserverOptions;
 
-	constructor(options: IIntersectionObserverOptions, elementsGroup: __LLI_ElementsGroup__)
+	constructor(opt: IIOOptions, elementsGroup: __LLI_ElementsGroup__)
 	{
-		const THRESHOLD: number | number[] = (
-			Array.isArray(options.threshold)
-			? new __TypeValidator__(options.threshold).expectType("number").fallback(1.0).validate()
-			: this.validateThresholdArrayOpt( (options.threshold as unknown) as number[] )
-		);
-
-		this.options = {
-			root:         new __TypeValidator__(options.root).expectTag().fallback(null).validate(),
-			rootMargin:   new __TypeValidator__(options.rootMargin).expectType("string").fallback("0px 0px 0px 0px").validate(),
-			scrollMargin: new __TypeValidator__(options.scrollMargin).expectType("string").fallback("0px 0px 0px 0px").validate(),
-			threshold:    THRESHOLD,
+		super();
+		const OPT: IIOOptions = {
+			root:         new __LLI_TV__(opt.root).expect(HTMLElement).fallback(null).val(),
+			rootMargin:   new __LLI_TV__(opt.rootMargin).expect("string").fallback("0px 0px 0px 0px").val(),
+			scrollMargin: new __LLI_TV__(opt.scrollMargin).expect("string").fallback("0px 0px 0px 0px").val(),
+			threshold:    this.valThreshold( opt.threshold ),
 		};
 
-		this.api = new IntersectionObserver( this.algorithm(), this.options );
-		this.elementsGroup = elementsGroup;
-		this.observeElements();
+		this.api = this.startAPI(OPT);
+		this.startToObserve();
 	}
 
-	useSrc(entry: IntersectionObserverEntry, origin: string): void
+	useSrc(entry: IntersectionObserverEntry, group: TSrcGroup): void
 	{
 		this.elementsGroup.useSrc(
 			parseInt( (entry.target as HTMLElement).dataset.lliId ),
-			origin
+			group,
 		);
 	}
 
-	private validateThresholdArrayOpt(thresholdOpt: number[]): number[]
+	startToObserve(): void
 	{
-		if(!thresholdOpt)
-			return null;
-
-		for(const ITEM of thresholdOpt)
-			new __TypeValidator__( ITEM ).expectType("number").validate();
-
-		return thresholdOpt;
+		this.elementsGroup.startToObserve( this.api );
 	}
 
-	private algorithm(): any
+	private valThreshold(threshold: number | number []): number | number[]
 	{
-		return (entries: IntersectionObserverEntry[]) =>
+		if(!Array.isArray(threshold))
+			return new __LLI_TV__(threshold).expect("number").fallback(1.0).val();
+
+		for(const NUM of threshold)
+			new __LLI_TV__(NUM).expect("number").val();
+
+		return threshold;
+	}
+
+	private startAPI(opt: IIOOptions): IntersectionObserver
+	{
+		return new IntersectionObserver((entries: IntersectionObserverEntry[]) =>
 		{
 			entries.forEach((entry: IntersectionObserverEntry) =>
 			{
-				if(entry.isIntersecting)
-					this.useSrc(entry, "high");
-				else
-					this.useSrc(entry, "lazy");
+				this.useSrc(entry,
+					entry.isIntersecting
+					? __LLI_SrcGroup__.HIGH
+					: __LLI_SrcGroup__.LAZY
+				);
 			});
-		};
-	}
-
-	private observeElements(): void
-	{
-		this.elementsGroup.startToObserve( this.api );
+		}, opt);
 	}
 }
 
 class LazyLoadingImage
 {
-	private readonly observer;
-	private readonly elementsGroup;
-
-	constructor(query: string, options: ILazyLoadingImageOptions = {})
+	constructor(query: string, opt: ILLIOptions = {} as ILLIOptions)
 	{
-		this.elementsGroup = new __LLI_ElementsGroup__(
-			query,
-			options.srcIsLazy,
-			options.styleClasses,
-		);
-
-		this.observer = new __LLI_Observer__(
-			options.observerOptions || {},
-			this.elementsGroup,
+		new __LLI_Observer__(
+			opt.observerOptions || ({} as IIOOptions),
+			new __LLI_ElementsGroup__(
+				query,
+				opt.useSrcAsFallbackToLazySrc,
+				opt.styleClasses,
+			),
 		);
 	}
 }
