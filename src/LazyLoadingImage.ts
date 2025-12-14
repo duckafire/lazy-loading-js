@@ -198,6 +198,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 	{
 		super();
 		this.elem = (new __LLI_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
+		this.setAttribute();
 
 		this.imgSrc = {
 			high: this.catchSrc(__LLI_SrcGroup__.HIGH, !useSrcAsFallbackToLazySrc),
@@ -227,6 +228,17 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 
 		if(this.toggleSrc( __LLI_ElemStatus__.LAZY, this.imgSrc.lazy ))
 			this.toggleStyles( __LLI_ElemStatus__.LAZY, stuff );
+	}
+
+	setAttribute()
+	{
+		// It is not defined "directly"
+		// (as a JS property) to force
+		// its declaration in old browser,
+		// because this attribute is new
+		// (Baseline 2023; written in 2025).
+		if(this.elem.getAttribute("loading") === undefined)
+			this.elem.setAttribute("loading", "lazy");
 	}
 
 	setGroupIndex(id: number): void
