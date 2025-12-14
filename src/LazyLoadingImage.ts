@@ -471,7 +471,7 @@ class LazyLoadingImage implements IStartToObserve
 		catch(ex)
 		{
 			if(ex instanceof APIUnavailableError)
-				this.isApiAvail= false;
+				this.isApiAvail = false;
 
 			throw ex;
 		}
@@ -483,6 +483,11 @@ class LazyLoadingImage implements IStartToObserve
 	isApiAvailable(): boolean
 	{
 		return this.isApiAvail;
+	}
+
+	isStarted(): boolean
+	{
+		return this.started;
 	}
 
 	startToObserve(): void
