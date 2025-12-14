@@ -55,6 +55,11 @@ interface ILLIOptions
 	useSrcAsFallbackToLazySrc: boolean;
 }
 
+interface IApiUnavailable
+{
+	apiUnavailable: () => void;
+}
+
 
 const __LLI_ElemStatus__ = Object.freeze({
 	NULL: 0,
@@ -172,8 +177,16 @@ class __LLI_TV__
 	}
 }
 
+class APIUnavailableError extends Error
+{
+	constructor()
+	{
+		super("Intersection Observer API is unavailable. High quality images are in use.");
+	}
+}
 
-class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
+
+class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnavailable
 {
 	private readonly elem: HTMLImageElement;
 	private readonly imgSrc: IImgSrc;
@@ -224,6 +237,13 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
 	getAsHTMLImg(): HTMLImageElement
 	{
 		return this.elem;
+	}
+
+	apiUnavailable(): void
+	{
+		// If it is call, `lliId`
+		// is not defined.
+		this.useSrc({high: null, lazy: null}, __LLI_SrcGroup__.HIGH);
 	}
 
 	private catchSrc(attr: TSrcGroup, srcAsFallback: boolean): string
@@ -279,7 +299,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
 	}
 }
 
-class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToObserve
+class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToObserve, IApiUnavailable
 {
 	private readonly styleClasses: IStyleClasses;
 
@@ -311,6 +331,12 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 			elem.setGroupIndex( id );
 			api.observe( elem.getAsHTMLImg() );
 		});
+	}
+
+	apiUnavailable(): void
+	{
+		for(let i = 0; i < this.elements.length; i++)
+			this.apiUnavailable()
 	}
 
 	private valStyle(group: string[]): string[]
@@ -348,6 +374,7 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 			threshold:    this.valThreshold( opt.threshold ),
 		};
 
+		this.isAvailable();
 		this.api = this.startAPI(OPT);
 		this.elementsGroup = elementsGroup;
 
@@ -378,6 +405,15 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 		return threshold;
 	}
 
+	private isAvailable(): void
+	{
+		if(window.IntersectionObserver !== undefined)
+			return;
+
+		this.elementsGroup.apiUnavailable();
+		throw new APIUnavailableError();
+	}
+
 	private startAPI(opt: IIOOptions): IntersectionObserver
 	{
 		return new IntersectionObserver((entries: IntersectionObserverEntry[]) =>
@@ -396,6 +432,8 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 
 class LazyLoadingImage
 {
+	private _isApiAvailable: boolean = true;
+
 	constructor(query: string, opt: ILLIOptions)
 	{
 		const OPT: ILLIOptions = new __LLI_TV__(opt)
@@ -403,13 +441,28 @@ class LazyLoadingImage
 			.fallback({}, true)
 			.val();
 
-		new __LLI_Observer__(
-			OPT.observerOptions || ({} as IIOOptions),
-			new __LLI_ElementsGroup__(
-				query,
-				OPT.useSrcAsFallbackToLazySrc,
-				OPT.styleClasses,
-			),
-		);
+		try
+		{
+			new __LLI_Observer__(
+				OPT.observerOptions || ({} as IIOOptions),
+				new __LLI_ElementsGroup__(
+					query,
+					OPT.useSrcAsFallbackToLazySrc,
+					OPT.styleClasses,
+				),
+			);
+		}
+		catch(ex)
+		{
+			if(ex instanceof APIUnavailableError)
+				this._isApiAvailable = false;
+
+			throw ex;
+		}
+	}
+
+	isApiAvailable(): boolean
+	{
+		return this._isApiAvailable;
 	}
 }
