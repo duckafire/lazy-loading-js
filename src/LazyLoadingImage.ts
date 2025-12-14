@@ -349,6 +349,8 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 		};
 
 		this.api = this.startAPI(OPT);
+		this.elementsGroup = elementsGroup;
+
 		this.startToObserve();
 	}
 
