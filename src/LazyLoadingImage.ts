@@ -43,16 +43,19 @@ interface IIOOptions
 	threshold: number | number[];
 }
 
-interface IStartToObserve
-{
-	startToObserve: (api?: IntersectionObserver) => void;
-}
-
 interface ILLIOptions
 {
+	waitToStart: boolean;
 	styleClasses: IStyleClasses;
 	observerOptions: IIOOptions;
 	useSrcAsFallbackToLazySrc: boolean;
+}
+
+
+
+interface IStartToObserve
+{
+	startToObserve: (api?: IntersectionObserver) => void;
 }
 
 interface IApiUnavailable
@@ -389,8 +392,6 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 		this.isAvailable();
 		this.api = this.startAPI(OPT);
 		this.elementsGroup = elementsGroup;
-
-		this.startToObserve();
 	}
 
 	useSrc(stuff: IntersectionObserverEntry, group: TSrcGroup): void
@@ -442,9 +443,12 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 	}
 }
 
-class LazyLoadingImage
+class LazyLoadingImage implements IStartToObserve
 {
-	private _isApiAvailable: boolean = true;
+	private observer: __LLI_Observer__;
+
+	private isApiAvail: boolean = true;
+	private started: boolean = false;
 
 	constructor(query: string, opt: ILLIOptions)
 	{
@@ -455,7 +459,7 @@ class LazyLoadingImage
 
 		try
 		{
-			new __LLI_Observer__(
+			this.observer = new __LLI_Observer__(
 				OPT.observerOptions || ({} as IIOOptions),
 				new __LLI_ElementsGroup__(
 					query,
@@ -467,14 +471,29 @@ class LazyLoadingImage
 		catch(ex)
 		{
 			if(ex instanceof APIUnavailableError)
-				this._isApiAvailable = false;
+				this.isApiAvail= false;
 
 			throw ex;
 		}
+
+		if(!OPT.waitToStart)
+			this.startToObserve();
 	}
 
 	isApiAvailable(): boolean
 	{
-		return this._isApiAvailable;
+		return this.isApiAvail;
+	}
+
+	startToObserve(): void
+	{
+		if(this.started)
+		{
+			console.warn(new Error("API already started."))
+			return;
+		}
+
+		this.started = true;
+		this.observer.startToObserve();
 	}
 }
