@@ -86,6 +86,7 @@ class __LLI_TV__
 
 	// default message
 	private exceptionMessage: string = "A type error occur.";
+	private fallbackWarning: Error = null;
 
 	constructor(v: unknown)
 	{
@@ -103,7 +104,14 @@ class __LLI_TV__
 		{
 			const VALUE_TYPE = typeof this.value;
 
-			this.isValidValue     = (t === "array" ? Array.isArray(this.value) : VALUE_TYPE === t);
+			this.isValidValue = (
+				t === "object"
+				? (this.value !== null && VALUE_TYPE === t)
+				: (t === "array"
+					? Array.isArray(this.value)
+					: VALUE_TYPE === t
+				)
+			);
 			this.exceptionMessage = `Expecting type "${t}", instead "${VALUE_TYPE}".`;
 			return this;
 		}
@@ -118,12 +126,16 @@ class __LLI_TV__
 		return this;
 	}
 
-	fallback(v: unknown): this
+	fallback(v: unknown, warning: boolean = false): this
 	{
 		if(this.fallback !== undefined)
 			throw new SyntaxError("Fallback already defined.");
 
 		this.isUndef(v);
+
+		if(warning)
+			this.fallbackWarning = new Error(`Invalid value type. Using fallback.`);
+
 		this.fallbackValue = v;
 		return this;
 	}
@@ -137,7 +149,12 @@ class __LLI_TV__
 			return this.value;
 
 		if(this.fallbackValue !== undefined)
+		{
+			if(this.fallbackWarning !== null)
+				console.warn(this.fallbackWarning);
+
 			return this.fallbackValue;
+		}
 
 		throw new TypeError( this.exceptionMessage );
 	}
@@ -377,14 +394,19 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 
 class LazyLoadingImage
 {
-	constructor(query: string, opt: ILLIOptions = {} as ILLIOptions)
+	constructor(query: string, opt: ILLIOptions)
 	{
+		const OPT: ILLIOptions = new __LLI_TV__(opt)
+			.expect("object")
+			.fallback({}, true)
+			.val();
+
 		new __LLI_Observer__(
-			opt.observerOptions || ({} as IIOOptions),
+			OPT.observerOptions || ({} as IIOOptions),
 			new __LLI_ElementsGroup__(
 				query,
-				opt.useSrcAsFallbackToLazySrc,
-				opt.styleClasses,
+				OPT.useSrcAsFallbackToLazySrc,
+				OPT.styleClasses,
 			),
 		);
 	}
