@@ -231,7 +231,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 
 	setGroupIndex(id: number): void
 	{
-		this.elem.dataset.llId = id.toString();
+		this.elem.dataset.lliId = id.toString();
 	}
 
 	getAsHTMLImg(): HTMLImageElement
