@@ -318,7 +318,7 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 		if(!group)
 			return null;
 
-		for(const CLASS of group)
+		for(const CLASS of (new __LLI_TV__(group).expect("array").val()))
 			new __LLI_TV__(CLASS).expect("string").val();
 
 		return group;
