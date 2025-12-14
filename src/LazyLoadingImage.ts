@@ -73,7 +73,7 @@ type TSrcGroup   = typeof __LLI_SrcGroup__[  keyof typeof __LLI_SrcGroup__  ];
 
 abstract class __LLI_UseSrc__<T extends IStyleClasses | number | IntersectionObserverEntry>
 {
-	abstract useSrc(T, group: TSrcGroup): void;
+	abstract useSrc(stuff: T, group: TSrcGroup): void;
 }
 
 
@@ -182,12 +182,12 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
 		this.clearBootAttr();
 	}
 
-	useSrc(styleClasses: IStyleClasses, group: TSrcGroup)
+	useSrc(stuff: IStyleClasses, group: TSrcGroup)
 	{
 		if(group === __LLI_SrcGroup__.HIGH)
 		{
 			if(this.toggleSrc( __LLI_ElemStatus__.HIGH, this.imgSrc.high ))
-				this.toggleStyles( __LLI_ElemStatus__.HIGH, styleClasses );
+				this.toggleStyles( __LLI_ElemStatus__.HIGH, stuff );
 
 			return;
 		}
@@ -196,7 +196,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses>
 			throw new SyntaxError(`Invalid source group: "${group}".`);
 
 		if(this.toggleSrc( __LLI_ElemStatus__.LAZY, this.imgSrc.lazy ))
-			this.toggleStyles( __LLI_ElemStatus__.LAZY, styleClasses );
+			this.toggleStyles( __LLI_ElemStatus__.LAZY, stuff );
 	}
 
 	setGroupIndex(id: number): void
@@ -282,9 +282,9 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 		);
 	}
 
-	useSrc(elemId: number, group: TSrcGroup)
+	useSrc(stuff: number, group: TSrcGroup)
 	{
-		this.elements[ elemId ].useSrc( this.styleClasses, group );
+		this.elements[ stuff ].useSrc( this.styleClasses, group );
 	}
 
 	startToObserve(api: IntersectionObserver): void
@@ -335,10 +335,10 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 		this.startToObserve();
 	}
 
-	useSrc(entry: IntersectionObserverEntry, group: TSrcGroup): void
+	useSrc(stuff: IntersectionObserverEntry, group: TSrcGroup): void
 	{
 		this.elementsGroup.useSrc(
-			parseInt( (entry.target as HTMLElement).dataset.lliId ),
+			parseInt( (stuff.target as HTMLElement).dataset.lliId ),
 			group,
 		);
 	}
