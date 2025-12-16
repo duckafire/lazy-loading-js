@@ -415,7 +415,7 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 	private valThreshold(threshold: number | number []): number | number[]
 	{
 		if(!Array.isArray(threshold))
-			return new __LLI_TV__(threshold).expect("number").fallback(1.0).val();
+			return new __LLI_TV__(threshold).expect("number").fallback(0.0).val();
 
 		for(const NUM of threshold)
 			new __LLI_TV__(NUM).expect("number").val();
