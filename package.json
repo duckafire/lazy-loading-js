@@ -24,10 +24,10 @@
     "url": "git+https://github.com/duckafire/lazy-loading-js.git"
   },
   "scripts": {
-    "minify": "cd ./dist; for file in *; do npx terser \"$file\" -o \"./$(basename -- \"${file%.js}\").min.js\" --compress --mangle; rm \"$file\"; done",
-    "test": "npx tsc",
-    "_build": "rm -r ./dist && npx tsc && npm run minify",
-    "build": "npm run _build --silent"
+    "minify": "cd ./dist;test $# -ne 0 && npx terser \"LazyLoading$1.js\" -o \"LazyLoading$1.min.js\" --compress --mangle && rm \"$1\" && exit 0;for file in *;do npx terser \"$file\" -o \"${file%.js}.min.js\" --compress --mangle;rm \"$file\";done",
+    "compile": "test $# -eq 0 && npx tsc && exit 0;npx tsc --project ./tsconfig.json \"./src/LazyLoading$1.js\"",
+    "clear": "test -d ./dist && rm -r ./dist",
+    "build": "test $# -eq 0 && npm run compile && npm run minify && exit 0;npm run compile \"$1\" && npm run minify \"$1\""
   },
   "files": [
     "LICENSE",
