@@ -98,7 +98,6 @@ class __LLI_TV__
 
 	constructor(v: unknown)
 	{
-		this.isUndef(v);
 		this.value = v;
 	}
 
@@ -136,7 +135,7 @@ class __LLI_TV__
 
 	fallback(v: unknown, warning: boolean = false): this
 	{
-		if(this.fallback !== undefined)
+		if(this.fallbackValue !== undefined)
 			throw new SyntaxError("Fallback already defined.");
 
 		this.isUndef(v);
