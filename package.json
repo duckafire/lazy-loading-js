@@ -32,14 +32,13 @@
   "files": [
     "LICENSE",
     "README.md",
-    "dist",
-    "src"
+    "dist"
   ],
   "custom-fields": {
     "cloud-repostories": [
-      "https://github.com/duckafire/lazy-loading-js.git",
-      "https://gitlab.com/duckafire/lazy-loading-js.git",
-      "https://npmjs.com/package/@duckafire/lazy-loading-js.git"
+      "https://github.com/duckafire/lazy-loading-js",
+      "https://gitlab.com/duckafire/lazy-loading-js",
+      "https://npmjs.com/package/@duckafire/lazy-loading-js"
     ]
   }
 }
