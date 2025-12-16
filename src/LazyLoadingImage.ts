@@ -262,7 +262,13 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 
 	private catchSrc(attr: TSrcGroup, srcAsFallback: boolean): string
 	{
-		return this.elem.dataset[ attr ] || (srcAsFallback ? this.elem.src : null);
+		if(this.elem.dataset[attr] !== undefined)
+			return this.elem.dataset[attr];
+
+		if(srcAsFallback)
+			return this.elem.src;
+
+		throw new Error(`Element attribute not found: \`data-${attr}\`.`);
 	}
 
 	private catchStyles(group: TSrcGroup): string[]
@@ -462,8 +468,8 @@ class LazyLoadingImage implements IStartToObserve
 				OPT.observerOptions || ({} as IIOOptions),
 				new __LLI_ElementsGroup__(
 					query,
-					OPT.useSrcAsFallbackToLazySrc,
-					OPT.styleClasses,
+					OPT.useSrcAsFallbackToLazySrc || true,
+					OPT.styleClasses || ({} as IStyleClasses),
 				),
 			);
 		}
