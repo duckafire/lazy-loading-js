@@ -25,9 +25,9 @@
   },
   "scripts": {
     "minify": "cd ./dist;test $# -ne 0 && npx terser \"LazyLoading$1.js\" -o \"LazyLoading$1.min.js\" --compress --mangle && rm \"$1\" && exit 0;for file in *;do npx terser \"$file\" -o \"${file%.js}.min.js\" --compress --mangle;rm \"$file\";done",
-    "compile": "test $# -eq 0 && npx tsc && exit 0;npx tsc --project ./tsconfig.json \"./src/LazyLoading$1.js\"",
+    "compile": "test $# -gt 0 && dest=\"$1\" || dest=\"dist\";case \"$dest\" in \"dist\") dest=\"./dist\";;\"test\") dest=\"./tests/lib\";;*) echo \"Invalid destine: $dest\" && exit 1;;esac;test $# -lt 2 && npx tsc --outDir \"$dest\" && unset dest && exit 0;npx tsc --project ./tsconfig.json --outDir \"$dest\" \"./src/LazyLoading$2.ts\";unset dest",
     "clear": "test -d ./dist && rm -r ./dist",
-    "build": "test $# -eq 0 && npm run compile && npm run minify && exit 0;npm run compile \"$1\" && npm run minify \"$1\"",
+    "build": "test $# -eq 0 && npm run compile dist && npm run minify && exit 0;npm run compile \"$1\" && npm run minify \"$1\"",
     "_help": "echo \"=== HELP === \n npm run <minify|compile|build> [Image]\n npm run <clear|help>\n\"",
     "help": "npm run _help --silent"
   },
