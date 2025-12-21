@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2016",
     "module": "none",
-    "outDir": "./dist",
     "rootDir": "./src",
     "strictNullChecks": false,
     "strict": true
