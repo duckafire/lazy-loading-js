@@ -15,11 +15,6 @@ const TEST_DIR = PATH.join(ROOT_DIR, "tests", "dist");
 
 const CMD = {};
 
-const MIN_OPT = Object.freeze({
-	compress: true,
-	mangle: true
-});
-
 class Getter
 {
 	#value;
@@ -50,6 +45,11 @@ class Tag extends Getter
 	isArray()
 	{
 		return this.#isArray;
+	}
+
+	equals(otherTag)
+	{
+		return this.get() === otherTag.get();
 	}
 
 	asPath(dir)
@@ -113,23 +113,22 @@ const list_files = (origin, names, ext) =>
 	return new NamesList( names, false );
 }
 
+const rmdir = (dir) =>
+{
+	dir = dir.asPath();
+
+	if(FS.existsSync(dir))
+		FS.rmSync(dir, {recursive: true});
+};
+
 const del_dirs = (...dirs) =>
 {
 	for(const DIR of dirs)
 	{
-		if(!DIR.isArray())
-		{
-			if(FS.existsSync(DIR.asPath()))
-				FS.rmSync( DIR.asPath(), { recursive: true });
-
-			continue;
-		}
-
-		DIR.get().forEach(dir =>
-		{
-			if(FS.existsSync(dir.asPath()))
-				FS.rmSync( dir.asPath(), { recursive: true });
-		});
+		if(DIR.isArray())
+			DIR.get().forEach( dir => rmdir(DIR) );
+		else
+			rmdir(DIR);
 	}
 };
 
@@ -155,7 +154,9 @@ CMD.build = async (...args) =>
 	}
 
 	CMD.compile( args.dest, ...args.names );
-	await CMD.minify(       ...args.names );
+
+	if(!args.dest.equals( TagsList.test ))
+		await CMD.minify( ...args.names );
 };
 
 CMD.clear = (...args) =>
@@ -220,7 +221,7 @@ CMD.minify = async (...names) =>
 	for(const SRC of list_files(DIST_DIR, names, "js").get())
 	{
 		code   = FS.readFileSync( SRC, OPT );
-		result = await minify(code, MIN_OPT);
+		result = await minify(code, { compress: true, mangle: true });
 
 		if(result.error)
 			throw result.error;
