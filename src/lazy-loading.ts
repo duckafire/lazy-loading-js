@@ -62,18 +62,12 @@ interface IApiUnavailable
 }
 
 
-const __LL_ElemStatus__ = Object.freeze({
-	NULL: 0,
+const __LL_SrcGroup__ = Object.freeze({
+	INIT: 0,
 	HIGH: 1,
 	LAZY: 2,
 } as const);
 
-const __LL_SrcGroup__ = Object.freeze({
-	HIGH: "high",
-	LAZY: "lazy",
-} as const);
-
-type TElemStatus = typeof __LL_ElemStatus__[keyof typeof __LL_ElemStatus__];
 type TSrcGroup   = typeof __LL_SrcGroup__[  keyof typeof __LL_SrcGroup__  ];
 
 
@@ -192,7 +186,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 	private readonly imgSrc: IImgSrc;
 	private readonly styleClasses: IStyleClasses;
 
-	private status: TElemStatus = __LL_ElemStatus__.NULL;
+	private curGroup: TSrcGroup = __LL_SrcGroup__.INIT;
 
 	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean = false)
 	{
@@ -217,8 +211,8 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 	{
 		if(group === __LL_SrcGroup__.HIGH)
 		{
-			if(this.toggleSrc( __LL_ElemStatus__.HIGH, this.imgSrc.high ))
-				this.toggleStyles( __LL_ElemStatus__.HIGH, stuff );
+			if(this.toggleSrc( __LL_SrcGroup__.HIGH, this.imgSrc.high ))
+				this.toggleStyles( __LL_SrcGroup__.HIGH, stuff );
 
 			return;
 		}
@@ -226,8 +220,8 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		if(group !== __LL_SrcGroup__.LAZY)
 			throw new SyntaxError(`Invalid source group: "${group}".`);
 
-		if(this.toggleSrc( __LL_ElemStatus__.LAZY, this.imgSrc.lazy ))
-			this.toggleStyles( __LL_ElemStatus__.LAZY, stuff );
+		if(this.toggleSrc( __LL_SrcGroup__.LAZY, this.imgSrc.lazy ))
+			this.toggleStyles( __LL_SrcGroup__.LAZY, stuff );
 	}
 
 	setAttribute()
@@ -284,28 +278,28 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 			this.elem.removeAttribute( "data-" + ATTR );
 	}
 
-	private toggleSrc(status: TElemStatus, src: string): boolean
+	private toggleSrc(group: TSrcGroup, src: string): boolean
 	{
-		if(this.status === status)
+		if(this.curGroup === group)
 			return false;
 
-		this.status = status;
+		this.curGroup = group;
 		this.elem.src = src;
 		return true;
 	}
 
-	private toggleStyles(status: TElemStatus, externStyleClasses: IStyleClasses): void
+	private toggleStyles(group: TSrcGroup, externStyleClasses: IStyleClasses): void
 	{
-		this.toggleIndieStyles( status, externStyleClasses );
-		this.toggleIndieStyles( status, this.styleClasses );
+		this.toggleIndieStyles( group, externStyleClasses );
+		this.toggleIndieStyles( group, this.styleClasses );
 	}
 
-	private toggleIndieStyles(status: TElemStatus, styles: IStyleClasses): void
+	private toggleIndieStyles(group: TSrcGroup, styles: IStyleClasses): void
 	{
 		let rmv = styles.lazy;
 		let add = styles.high;
 
-		if(status === __LL_ElemStatus__.LAZY)
+		if(group === __LL_SrcGroup__.LAZY)
 		{
 			rmv = styles.high;
 			add = styles.lazy;
