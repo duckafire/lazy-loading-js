@@ -280,10 +280,8 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 
 	private clearBootAttr(): void
 	{
-		delete this.elem.dataset.high,
-				this.elem.dataset.lazy,
-				this.elem.dataset.styleHigh,
-				this.elem.dataset.styleLazy;
+		for(const ATTR of ["high", "lazy", "styleHigh", "styleLazy"])
+			this.elem.removeAttribute( "data-" + ATTR );
 	}
 
 	private toggleSrc(status: TElemStatus, src: string): boolean
