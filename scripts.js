@@ -47,11 +47,6 @@ class Tag extends Getter
 		return this.#isArray;
 	}
 
-	equals(otherTag)
-	{
-		return this.get() === otherTag.get();
-	}
-
 	asPath(dir)
 	{
 		dir = dir ?? "";
@@ -63,33 +58,13 @@ class Tag extends Getter
 	}
 }
 
-class NamesList extends Getter
-{
-	// "Default" are files from the
-	// default source directory, it
-	// variates between different
-	// contexts.
-	#isDef;
-
-	constructor(v, useDefault = true)
-	{
-		super(v);
-		this.#isDef = useDefault;
-	}
-
-	isDefault()
-	{
-		return this.#isDef;
-	}
-}
-
 const TagsList = Object.freeze({
 	all:  Object.freeze(new Tag("all"), ["dist", "tests/libs"]),
 	dist: Object.freeze(new Tag("dist")),
 	test: Object.freeze(new Tag("test", "tests/libs")),
 
 	// TRANSform
-	trans(str)
+	trans(str, fallback)
 	{
 		if(str instanceof Tag)
 			return str;
@@ -98,20 +73,20 @@ const TagsList = Object.freeze({
 			if(str === TAG)
 				return this[ TAG ];
 
-		throw new Error(`Invalid tag: "${str}" (type: ${str.constructor ? str.constructor.name : typeof str}).`);
-	}
+		if(fallback !== undefined)
+			return fallback;
+
+		throw new Error(`Invalid tag: "${str}" (type: ${str != undefined ? str.constructor.name : str}).`);
+	},
+
+	equals(str, tag)
+	{
+		if(!str || !tag)
+			return false;
+
+		return TagsList.trans(str).get() === tag.get();
+	},
 });
-
-const list_files = (origin, names, ext) =>
-{
-	if(names.length === 0)
-		return new NamesList( FS.readdirSync(origin).map(name => PATH.resolve(origin, name)) );
-
-	for(let i = 0; i < names.length; i++)
-		names[i] = PATH.resolve(origin, `LazyLoading${names[i]}.${ext}`);
-
-	return new NamesList( names, false );
-}
 
 const rmdir = (dir) =>
 {
@@ -132,36 +107,18 @@ const del_dirs = (...dirs) =>
 	}
 };
 
-// DECompose Compilation ARGumentS
-const dec_c_args = (...args) =>
+// ALPHABETIC ORDER
+CMD.build = async (dest) =>
 {
-	return {
-		dest:  args.length > 0 ? TagsList.trans(args[0]) : TagsList.dist,
-		names: args.length > 1 ? args.slice(1)           : [],
-	};
-}
+	CMD.compile(dest);
 
-// alphabetic order
-CMD.build = async (...args) =>
-{
-	args = dec_c_args(...args);
-
-	if(args.names.length === 0)
-	{
-		CMD.compile(args.dest);
+	if(!TagsList.equals( dest, TagsList.test ))
 		await CMD.minify();
-		return;
-	}
-
-	CMD.compile( args.dest, ...args.names );
-
-	if(!args.dest.equals( TagsList.test ))
-		await CMD.minify( ...args.names );
 };
 
-CMD.clear = (...args) =>
+CMD.clear = (tag) =>
 {
-	const TARGET = TagsList.trans(args[0] || TagsList.all);
+	const TARGET = TagsList.trans(tag, TagsList.all);
 	switch( TARGET.get() )
 	{
 		case TagsList.all.get():  del_dirs(TagsList.dist, TagsList.test); return;
@@ -171,13 +128,12 @@ CMD.clear = (...args) =>
 	}
 };
 
-CMD.compile = (...args) =>
+CMD.compile = (dest) =>
 {
-	args = dec_c_args(...args);
-	const DEST_PATH  = args.dest.asPath();
+	const DEST_PATH = TagsList.trans(dest, TagsList.dist).asPath();
 
 	if(!FS.existsSync( DEST_PATH ))
-		FS.mkdirSync( DEST_PATH );
+		FS.mkdirSync(  DEST_PATH );
 
 	const PARSED_CONFIG = TSC.parseJsonConfigFileContent(
 		TSC.readConfigFile(
@@ -188,11 +144,10 @@ CMD.compile = (...args) =>
 		ROOT_DIR
 	);
 
-	const FILES_LIST = list_files( DEST_PATH, args.names, "ts" );
 	PARSED_CONFIG.options.outDir = DEST_PATH;
 
 	const PROGRAM = TSC.createProgram(
-		(FILES_LIST.isDefault ? PARSED_CONFIG.fileNames : FILES_LIST.get()),
+		PARSED_CONFIG.fileNames,
 		PARSED_CONFIG.options,
 		TSC.createCompilerHost(PARSED_CONFIG.options),
 	);
@@ -213,21 +168,23 @@ CMD.compile = (...args) =>
 	);
 };
 
-CMD.minify = async (...names) =>
+CMD.minify = async () =>
 {
-	let code, result;
+	let code, result, srcPath;
 	const OPT = { encoding: "utf8" };
 
-	for(const SRC of list_files(DIST_DIR, names, "js").get())
+	for(const SRC of FS.readdirSync( DIST_DIR ))
 	{
-		code   = FS.readFileSync( SRC, OPT );
+		srcPath = PATH.resolve(DIST_DIR, SRC);
+
+		code   = FS.readFileSync( srcPath, OPT );
 		result = await minify(code, { compress: true, mangle: true });
 
 		if(result.error)
 			throw result.error;
 
-		FS.writeFileSync( SRC.slice(0, SRC.length - 3 ) + ".min.js", result.code, OPT );
-		FS.unlinkSync( SRC );
+		FS.writeFileSync( PATH.resolve(DIST_DIR, SRC.slice(0, SRC.length - 2 ) + "min.js"), result.code, OPT );
+		FS.unlinkSync( srcPath );
 	}
 };
 
@@ -235,11 +192,10 @@ CMD.help = () =>
 {
 	console.info(
 		"=== HELP ===\n" +
-		" npm run <build|compile> [dist:default|test] [Image]\n" +
+		" npm run <build|compile> [dist:default|test]\n" +
 		" npm run clear [all:default|dist|test]\n" +
-		" npm run help\n" +
-		" npm run minify [Image]\n"
+		" npm run <help|minify>\n"
 	);
-}
+};
 
-CMD[ process.argv[2] ]( ...process.argv.slice(3) );
+CMD[ process.argv[2] ]( process.argv[3] );
