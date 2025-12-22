@@ -271,7 +271,11 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 
 	private catchStyles(group: TSrcGroup): string[]
 	{
-		return (this.elem.getAttribute( "data-style-" + group )?.split(",")) || null;
+		return (
+			this.elem.getAttribute( "data-style-" + group )
+				?.split(",")
+				.map(item => item.trim())
+		) || null;
 	}
 
 	private clearBootAttr(): void
