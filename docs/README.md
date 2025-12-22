@@ -6,6 +6,11 @@
 
 > In cascating.
 
+* [Flowcharts style](#flowcharts-style)
+* [TypeScript code](#typescript-code)
+	* [Nomainclature](#nomainclature)
+	* [Design choices](#design-choices)
+
 
 
 ### Flowchart style
@@ -28,7 +33,7 @@
 
 
 
-## Code
+## TypeScript code
 
 > [KISS][kiss]; [YAGNI][yagni].
 
@@ -55,7 +60,7 @@
 
 
 
-### Language resources
+### Design choices
 
 1. Avoid:
 	1. function types (`type foo = () => void`).
