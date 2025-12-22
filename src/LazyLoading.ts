@@ -446,7 +446,7 @@ class __LL_Observer__ extends __LL_UseSrc__<IntersectionObserverEntry> implement
 	}
 }
 
-class LazyLoadingImage implements IStartToObserve
+class LazyLoadingImages implements IStartToObserve
 {
 	private observer: __LL_Observer__;
 
