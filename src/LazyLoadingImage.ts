@@ -20,8 +20,6 @@
  * 3. This notice may not be removed or altered from any source distribution.
  * */
 
-// LLI === Lazy Loading Image
-
 interface IImgSrc
 {
 	high: string;
@@ -43,7 +41,7 @@ interface IIOOptions
 	threshold: number | number[];
 }
 
-interface ILLIOptions
+interface ILLImagesOptions
 {
 	waitToStart: boolean;
 	styleClasses: IStyleClasses;
@@ -64,29 +62,29 @@ interface IApiUnavailable
 }
 
 
-const __LLI_ElemStatus__ = Object.freeze({
+const __LL_ElemStatus__ = Object.freeze({
 	NULL: 0,
 	HIGH: 1,
 	LAZY: 2,
 } as const);
 
-const __LLI_SrcGroup__ = Object.freeze({
+const __LL_SrcGroup__ = Object.freeze({
 	HIGH: "high",
 	LAZY: "lazy",
 } as const);
 
-type TElemStatus = typeof __LLI_ElemStatus__[keyof typeof __LLI_ElemStatus__];
-type TSrcGroup   = typeof __LLI_SrcGroup__[  keyof typeof __LLI_SrcGroup__  ];
+type TElemStatus = typeof __LL_ElemStatus__[keyof typeof __LL_ElemStatus__];
+type TSrcGroup   = typeof __LL_SrcGroup__[  keyof typeof __LL_SrcGroup__  ];
 
 
-abstract class __LLI_UseSrc__<T extends IStyleClasses | number | IntersectionObserverEntry>
+abstract class __LL_UseSrc__<T extends IStyleClasses | number | IntersectionObserverEntry>
 {
 	abstract useSrc(stuff: T, group: TSrcGroup): void;
 }
 
 
 // Type Validator
-class __LLI_TV__
+class __LL_TV__
 {
 	private readonly value: unknown;
 	private fallbackValue: unknown;
@@ -188,28 +186,28 @@ class APIUnavailableError extends Error
 }
 
 
-class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnavailable
+class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavailable
 {
 	private readonly elem: HTMLImageElement;
 	private readonly imgSrc: IImgSrc;
 	private readonly styleClasses: IStyleClasses;
 
-	private status: TElemStatus = __LLI_ElemStatus__.NULL;
+	private status: TElemStatus = __LL_ElemStatus__.NULL;
 
 	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean = false)
 	{
 		super();
-		this.elem = (new __LLI_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
+		this.elem = (new __LL_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
 		this.setAttribute();
 
 		this.imgSrc = {
-			high: this.catchSrc(__LLI_SrcGroup__.HIGH, !useSrcAsFallbackToLazySrc),
-			lazy: this.catchSrc(__LLI_SrcGroup__.LAZY,  useSrcAsFallbackToLazySrc),
+			high: this.catchSrc(__LL_SrcGroup__.HIGH, !useSrcAsFallbackToLazySrc),
+			lazy: this.catchSrc(__LL_SrcGroup__.LAZY,  useSrcAsFallbackToLazySrc),
 		};
 
 		this.styleClasses = {
-			high: this.catchStyles(__LLI_SrcGroup__.HIGH),
-			lazy: this.catchStyles(__LLI_SrcGroup__.LAZY),
+			high: this.catchStyles(__LL_SrcGroup__.HIGH),
+			lazy: this.catchStyles(__LL_SrcGroup__.LAZY),
 		};
 
 		this.clearBootAttr();
@@ -217,19 +215,19 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 
 	useSrc(stuff: IStyleClasses, group: TSrcGroup)
 	{
-		if(group === __LLI_SrcGroup__.HIGH)
+		if(group === __LL_SrcGroup__.HIGH)
 		{
-			if(this.toggleSrc( __LLI_ElemStatus__.HIGH, this.imgSrc.high ))
-				this.toggleStyles( __LLI_ElemStatus__.HIGH, stuff );
+			if(this.toggleSrc( __LL_ElemStatus__.HIGH, this.imgSrc.high ))
+				this.toggleStyles( __LL_ElemStatus__.HIGH, stuff );
 
 			return;
 		}
 
-		if(group !== __LLI_SrcGroup__.LAZY)
+		if(group !== __LL_SrcGroup__.LAZY)
 			throw new SyntaxError(`Invalid source group: "${group}".`);
 
-		if(this.toggleSrc( __LLI_ElemStatus__.LAZY, this.imgSrc.lazy ))
-			this.toggleStyles( __LLI_ElemStatus__.LAZY, stuff );
+		if(this.toggleSrc( __LL_ElemStatus__.LAZY, this.imgSrc.lazy ))
+			this.toggleStyles( __LL_ElemStatus__.LAZY, stuff );
 	}
 
 	setAttribute()
@@ -257,7 +255,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 	{
 		// If it is call, `lliId`
 		// is not defined.
-		this.useSrc({high: null, lazy: null}, __LLI_SrcGroup__.HIGH);
+		this.useSrc({high: null, lazy: null}, __LL_SrcGroup__.HIGH);
 	}
 
 	private catchSrc(attr: TSrcGroup, srcAsFallback: boolean): string
@@ -305,7 +303,7 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 		let rmv = styles.lazy;
 		let add = styles.high;
 
-		if(status === __LLI_ElemStatus__.LAZY)
+		if(status === __LL_ElemStatus__.LAZY)
 		{
 			rmv = styles.high;
 			add = styles.lazy;
@@ -319,11 +317,11 @@ class __LLI_Element__ extends __LLI_UseSrc__<IStyleClasses> implements IApiUnava
 	}
 }
 
-class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToObserve, IApiUnavailable
+class __LL_ElementsGroup__ extends __LL_UseSrc__<number> implements IStartToObserve, IApiUnavailable
 {
 	private readonly styleClasses: IStyleClasses;
 
-	private elements: __LLI_Element__[] = [];
+	private elements: __LL_Element__[] = [];
 
 	constructor(query: string, useSrcAsFallbackToLazySrc: boolean, style: IStyleClasses)
 	{
@@ -334,7 +332,7 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 		};
 
 		this.catchElements(
-			new __LLI_TV__(query).expect("string").val(),
+			new __LL_TV__(query).expect("string").val(),
 			useSrcAsFallbackToLazySrc,
 		);
 	}
@@ -346,7 +344,7 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 
 	startToObserve(api: IntersectionObserver): void
 	{
-		this.elements.forEach((elem: __LLI_Element__, id: number): void =>
+		this.elements.forEach((elem: __LL_Element__, id: number): void =>
 		{
 			elem.setGroupIndex( id );
 			api.observe( elem.getAsHTMLImg() );
@@ -364,8 +362,8 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 		if(!group)
 			return null;
 
-		for(const CLASS of (new __LLI_TV__(group).expect("array").val()))
-			new __LLI_TV__(CLASS).expect("string").val();
+		for(const CLASS of (new __LL_TV__(group).expect("array").val()))
+			new __LL_TV__(CLASS).expect("string").val();
 
 		return group;
 	}
@@ -374,23 +372,23 @@ class __LLI_ElementsGroup__ extends __LLI_UseSrc__<number> implements IStartToOb
 	{
 		document.querySelectorAll( query ).forEach((elem: unknown): void =>
 		{
-			this.elements.push( new __LLI_Element__((elem as HTMLImageElement), useSrc) );
+			this.elements.push( new __LL_Element__((elem as HTMLImageElement), useSrc) );
 		});
 	}
 }
 
-class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> implements IStartToObserve
+class __LL_Observer__ extends __LL_UseSrc__<IntersectionObserverEntry> implements IStartToObserve
 {
 	private readonly api: IntersectionObserver;
-	private readonly elementsGroup: __LLI_ElementsGroup__;
+	private readonly elementsGroup: __LL_ElementsGroup__;
 
-	constructor(opt: IIOOptions, elementsGroup: __LLI_ElementsGroup__)
+	constructor(opt: IIOOptions, elementsGroup: __LL_ElementsGroup__)
 	{
 		super();
 		const OPT: IIOOptions = {
-			root:         new __LLI_TV__(opt.root).expect(HTMLElement).fallback(null).val(),
-			rootMargin:   new __LLI_TV__(opt.rootMargin).expect("string").fallback("0px 0px 0px 0px").val(),
-			scrollMargin: new __LLI_TV__(opt.scrollMargin).expect("string").fallback("0px 0px 0px 0px").val(),
+			root:         new __LL_TV__(opt.root).expect(HTMLElement).fallback(null).val(),
+			rootMargin:   new __LL_TV__(opt.rootMargin).expect("string").fallback("0px 0px 0px 0px").val(),
+			scrollMargin: new __LL_TV__(opt.scrollMargin).expect("string").fallback("0px 0px 0px 0px").val(),
 			threshold:    this.valThreshold( opt.threshold ),
 		};
 
@@ -415,10 +413,10 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 	private valThreshold(threshold: number | number []): number | number[]
 	{
 		if(!Array.isArray(threshold))
-			return new __LLI_TV__(threshold).expect("number").fallback(0.0).val();
+			return new __LL_TV__(threshold).expect("number").fallback(0.0).val();
 
 		for(const NUM of threshold)
-			new __LLI_TV__(NUM).expect("number").val();
+			new __LL_TV__(NUM).expect("number").val();
 
 		return threshold;
 	}
@@ -440,8 +438,8 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 			{
 				this.useSrc(entry,
 					entry.isIntersecting
-					? __LLI_SrcGroup__.HIGH
-					: __LLI_SrcGroup__.LAZY
+					? __LL_SrcGroup__.HIGH
+					: __LL_SrcGroup__.LAZY
 				);
 			});
 		}, opt);
@@ -450,23 +448,23 @@ class __LLI_Observer__ extends __LLI_UseSrc__<IntersectionObserverEntry> impleme
 
 class LazyLoadingImage implements IStartToObserve
 {
-	private observer: __LLI_Observer__;
+	private observer: __LL_Observer__;
 
 	private isApiAvail: boolean = true;
 	private started: boolean = false;
 
-	constructor(query: string, opt: ILLIOptions)
+	constructor(query: string, opt: ILLImagesOptions)
 	{
-		const OPT: ILLIOptions = new __LLI_TV__(opt)
+		const OPT: ILLImagesOptions = new __LL_TV__(opt)
 			.expect("object")
 			.fallback({}, true)
 			.val();
 
 		try
 		{
-			this.observer = new __LLI_Observer__(
+			this.observer = new __LL_Observer__(
 				OPT.observerOptions || ({} as IIOOptions),
-				new __LLI_ElementsGroup__(
+				new __LL_ElementsGroup__(
 					query,
 					OPT.useSrcAsFallbackToLazySrc || true,
 					OPT.styleClasses || ({} as IStyleClasses),
