@@ -237,7 +237,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		// its declaration in old browser,
 		// because this attribute is new
 		// (Baseline 2023; written in 2025).
-		if(this.elem.getAttribute("loading") === undefined)
+		if(this.elem.getAttribute("loading") === null)
 			this.elem.setAttribute("loading", "lazy");
 	}
 
