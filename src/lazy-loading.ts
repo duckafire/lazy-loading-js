@@ -201,8 +201,8 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		this.setAttribute();
 
 		this.imgSrc = {
-			high: this.catchSrc(__LL_SrcGroup__.HIGH, !useSrcAsFallbackToLazySrc),
-			lazy: this.catchSrc(__LL_SrcGroup__.LAZY,  useSrcAsFallbackToLazySrc),
+			high: this.catchSrc("high", !useSrcAsFallbackToLazySrc),
+			lazy: this.catchSrc("lazy",  useSrcAsFallbackToLazySrc),
 		};
 
 		this.styleClasses = {
@@ -258,7 +258,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		this.useSrc({high: null, lazy: null}, __LL_SrcGroup__.HIGH);
 	}
 
-	private catchSrc(attr: TSrcGroup, srcAsFallback: boolean): string
+	private catchSrc(attr: string, srcAsFallback: boolean): string
 	{
 		if(this.elem.dataset[attr] !== undefined)
 			return this.elem.dataset[attr];
