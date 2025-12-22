@@ -32,6 +32,11 @@ Currently, it supports:
 #### Index
 
 * [LazyLoadingImages](#lazyloadingimages)
+	* [Element attributes](#element-attributes)
+	* [Methods](#methods)
+		* [isApiAvailable](#isapiavailable)
+		* [isStarted](#isstarted)
+		* [startToObserve](#starttoobserve)
 
 > [!IMPORTANT]
 > To improve the understanding of this documentation, types was added to 
@@ -55,6 +60,24 @@ Currently, it supports:
 
 ---
 
+#### Element attributes
+
+* `data-high`: path of the high quality image. It is optional if
+  `options.useSrcAsFallbackToLazySrc === false`.
+
+* `data-lazy`: path of the lazy quality image. It is optional if
+  `options.useSrcAsFallbackToLazySrc === true`.
+
+* `data-style-high` (optional): comman-separated list formed of CSS styles they will
+  be given to the catched elements when the show/hide event occur.
+
+* `data-style-lazy` (optional): comman-separated list formed of CSS styles they will
+  be given to the catched elements when the show/hide event occur.
+
+#### Methods
+
+##### isApiAvailable
+
 * `isApiAvailable(): boolean`
 
 * Behavior: verify if the API is available.
@@ -62,12 +85,16 @@ Currently, it supports:
 
 ---
 
+##### isStarted
+
 * `isStarted(): boolean`
 
 * Behavior: verify if the API algorithm was started.
 * Return: result, in boolean.
 
 ---
+
+##### startToObserve
 
 * `startToObserve(): void`
 
