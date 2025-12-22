@@ -3,6 +3,7 @@
 
 const FS   = require("fs");
 const PATH = require("path");
+const TSC  = require("typescript")
 
 //const TSC        = require("typescript");
 const { minify } = require("terser");
@@ -19,22 +20,31 @@ const MIN_OPT = Object.freeze({
 	mangle: true
 });
 
-class Tag
+class Getter
 {
 	#value;
-	#path;
-	#isArray;
 
-	constructor(v, p)
+	constructor(v)
 	{
-		this.#value   = v;
-		this.#path    = p ?? v;
-		this.#isArray = Array.isArray(this.#path);
+		this.#value = Object.freeze(v);
 	}
 
 	get()
 	{
 		return this.#value;
+	}
+}
+
+class Tag extends Getter
+{
+	#path;
+	#isArray;
+
+	constructor(v, p)
+	{
+		super(v);
+		this.#path    = p ?? v;
+		this.#isArray = Array.isArray(this.#path);
 	}
 
 	isArray()
@@ -50,6 +60,26 @@ class Tag
 			return this.#path.map(name => PATH.resolve(dir, name));
 		else
 			return PATH.resolve(dir ?? "", this.#path);
+	}
+}
+
+class NamesList extends Getter
+{
+	// "Default" are files from the
+	// default source directory, it
+	// variates between different
+	// contexts.
+	#isDef;
+
+	constructor(v, useDefault = true)
+	{
+		super(v);
+		this.#isDef = useDefault;
+	}
+
+	isDefault()
+	{
+		return this.#isDef;
 	}
 }
 
@@ -75,12 +105,12 @@ const TagsList = Object.freeze({
 const list_files = (origin, names, ext) =>
 {
 	if(names.length === 0)
-		return FS.readdirSync(origin).map(name => PATH.resolve(origin, name));
+		return new NamesList( FS.readdirSync(origin).map(name => PATH.resolve(origin, name)) );
 
 	for(let i = 0; i < names.length; i++)
 		names[i] = PATH.resolve(origin, `LazyLoading${names[i]}.${ext}`);
 
-	return names;
+	return new NamesList( names, false );
 }
 
 const del_dirs = (...dirs) =>
@@ -107,24 +137,24 @@ const del_dirs = (...dirs) =>
 const dec_c_args = (...args) =>
 {
 	return {
-		dest: args.length > 0 ? args[0]       : TagsList.dist,
-		name: args.length > 1 ? args.slice(1) : [],
+		dest:  args.length > 0 ? TagsList.trans(args[0]) : TagsList.dist,
+		names: args.length > 1 ? args.slice(1)           : [],
 	};
 }
 
 // alphabetic order
 CMD.build = async (...args) =>
 {
-	args = dec_c_args(args);
+	args = dec_c_args(...args);
 
 	if(args.names.length === 0)
 	{
-		//CMD.compile(args.dest);
+		CMD.compile(args.dest);
 		await CMD.minify();
 		return;
 	}
 
-	//CMD.compile( args.dest, ...args.names );
+	CMD.compile( args.dest, ...args.names );
 	await CMD.minify(       ...args.names );
 };
 
@@ -142,8 +172,44 @@ CMD.clear = (...args) =>
 
 CMD.compile = (...args) =>
 {
-	args = dec_c_args(args);
-	console.log("WIP");
+	args = dec_c_args(...args);
+	const DEST_PATH  = args.dest.asPath();
+
+	if(!FS.existsSync( DEST_PATH ))
+		FS.mkdirSync( DEST_PATH );
+
+	const PARSED_CONFIG = TSC.parseJsonConfigFileContent(
+		TSC.readConfigFile(
+			PATH.resolve("tsconfig.json"),
+			TSC.sys.readFile
+		).config,
+		TSC.sys,
+		ROOT_DIR
+	);
+
+	const FILES_LIST = list_files( DEST_PATH, args.names, "ts" );
+	PARSED_CONFIG.options.outDir = DEST_PATH;
+
+	const PROGRAM = TSC.createProgram(
+		(FILES_LIST.isDefault ? PARSED_CONFIG.fileNames : FILES_LIST.get()),
+		PARSED_CONFIG.options,
+		TSC.createCompilerHost(PARSED_CONFIG.options),
+	);
+
+	const DIAG = TSC.getPreEmitDiagnostics(PROGRAM)
+		.concat(PROGRAM.emit().diagnostics);
+
+	if(!DIAG.length)
+		return;
+
+	throw TSC.formatDiagnosticsWithColorAndContext(
+		DIAG,
+		{
+			getCurrentDirectory: TSC.sys.getCurrentDirectory,
+			getCanonicalFileName: f => f,
+			getNewLine: () => TSC.sys.newLine,
+		}
+	);
 };
 
 CMD.minify = async (...names) =>
@@ -151,7 +217,7 @@ CMD.minify = async (...names) =>
 	let code, result;
 	const OPT = { encoding: "utf8" };
 
-	for(const SRC of list_files(DIST_DIR, names, "js"))
+	for(const SRC of list_files(DIST_DIR, names, "js").get())
 	{
 		code   = FS.readFileSync( SRC, OPT );
 		result = await minify(code, MIN_OPT);
