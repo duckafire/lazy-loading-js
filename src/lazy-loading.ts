@@ -187,7 +187,7 @@ class __LL_Element__ implements IUseSrc, IApiUnavailable
 
 	private curGroup: TSrcGroup = __LL_SrcGroup__.INIT;
 
-	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean = false)
+	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean)
 	{
 		this.elem = (new __LL_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
 		this.setAttribute();
@@ -205,7 +205,7 @@ class __LL_Element__ implements IUseSrc, IApiUnavailable
 		this.clearBootAttr();
 	}
 
-	useSrc(stuff: unknown, group: TSrcGroup)
+	useSrc(stuff: unknown, group: TSrcGroup): void
 	{
 		if(group === __LL_SrcGroup__.HIGH)
 		{
@@ -220,17 +220,6 @@ class __LL_Element__ implements IUseSrc, IApiUnavailable
 
 		if(this.toggleSrc( __LL_SrcGroup__.LAZY, this.imgSrc.lazy ))
 			this.toggleStyles( __LL_SrcGroup__.LAZY, stuff as IStyleClasses );
-	}
-
-	setAttribute()
-	{
-		// It is not defined "directly"
-		// (as a JS property) to force
-		// its declaration in old browser,
-		// because this attribute is new
-		// (Baseline 2023; written in 2025).
-		if(this.elem.getAttribute("loading") === null)
-			this.elem.setAttribute("loading", "lazy");
 	}
 
 	setGroupIndex(id: number): void
@@ -248,6 +237,17 @@ class __LL_Element__ implements IUseSrc, IApiUnavailable
 		// If it is call, `lliId`
 		// is not defined.
 		this.useSrc({high: null, lazy: null}, __LL_SrcGroup__.HIGH);
+	}
+
+	private setAttribute(): void
+	{
+		// It is not defined "directly"
+		// (as a JS property) to force
+		// its declaration in old browser,
+		// because this attribute is new
+		// (Baseline 2023; written in 2025).
+		if(this.elem.getAttribute("loading") === null)
+			this.elem.setAttribute("loading", "lazy");
 	}
 
 	private catchSrc(attr: string, srcAsFallback: boolean): string
@@ -330,7 +330,7 @@ class __LL_ElementsGroup__ implements IUseSrc, IStartToObserve, IApiUnavailable
 		);
 	}
 
-	useSrc(stuff: unknown, group: TSrcGroup)
+	useSrc(stuff: unknown, group: TSrcGroup): void
 	{
 		this.elements[ stuff as number ].useSrc( this.styleClasses, group );
 	}
@@ -377,6 +377,8 @@ class __LL_Observer__ implements IUseSrc, IStartToObserve
 
 	constructor(opt: IIOOptions, elementsGroup: __LL_ElementsGroup__)
 	{
+		this.isAvailable();
+
 		const OPT: IIOOptions = {
 			root:         new __LL_TV__(opt.root).expect(HTMLElement).fallback(null).val(),
 			rootMargin:   new __LL_TV__(opt.rootMargin).expect("string").fallback("0px 0px 0px 0px").val(),
@@ -384,7 +386,6 @@ class __LL_Observer__ implements IUseSrc, IStartToObserve
 			threshold:    this.valThreshold( opt.threshold ),
 		};
 
-		this.isAvailable();
 		this.api = this.startAPI(OPT);
 		this.elementsGroup = elementsGroup;
 	}
