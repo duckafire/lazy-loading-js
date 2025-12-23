@@ -1,9 +1,9 @@
 {
   "name": "@duckafire/lazy-loading-js",
   "author": "duckafire",
-  "version": "2.0.2-4",
+  "version": "3.0.0",
   "license": "Zlib",
-  "description": "Simple lazy loading algorithm for websites front-end.",
+  "description": "Simple, no-dependeces, lazy loading implementation to FrontEnd WEB",
   "keywords": [
     "client",
     "html",
