@@ -200,8 +200,8 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		};
 
 		this.styleClasses = {
-			high: this.catchStyles(__LL_SrcGroup__.HIGH),
-			lazy: this.catchStyles(__LL_SrcGroup__.LAZY),
+			high: this.catchStyles("high"),
+			lazy: this.catchStyles("lazy"),
 		};
 
 		this.clearBootAttr();
@@ -263,7 +263,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		throw new Error(`Element attribute not found: \`data-${attr}\`.`);
 	}
 
-	private catchStyles(group: TSrcGroup): string[]
+	private catchStyles(group: string): string[]
 	{
 		return (
 			this.elem.getAttribute( "data-style-" + group )
