@@ -61,6 +61,11 @@ interface IApiUnavailable
 	apiUnavailable: () => void;
 }
 
+interface IUseSrc
+{
+	useSrc: (stuff: unknown, group: TSrcGroup) => void;
+}
+
 
 const __LL_SrcGroup__ = Object.freeze({
 	INIT: 0,
@@ -68,13 +73,7 @@ const __LL_SrcGroup__ = Object.freeze({
 	LAZY: 2,
 } as const);
 
-type TSrcGroup   = typeof __LL_SrcGroup__[  keyof typeof __LL_SrcGroup__  ];
-
-
-abstract class __LL_UseSrc__<T extends IStyleClasses | number | IntersectionObserverEntry>
-{
-	abstract useSrc(stuff: T, group: TSrcGroup): void;
-}
+type TSrcGroup = typeof __LL_SrcGroup__[  keyof typeof __LL_SrcGroup__  ];
 
 
 // Type Validator
@@ -180,7 +179,7 @@ class APIUnavailableError extends Error
 }
 
 
-class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavailable
+class __LL_Element__ implements IUseSrc, IApiUnavailable
 {
 	private readonly elem: HTMLImageElement;
 	private readonly imgSrc: IImgSrc;
@@ -190,7 +189,6 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 
 	constructor(elem: HTMLElement, useSrcAsFallbackToLazySrc: boolean = false)
 	{
-		super();
 		this.elem = (new __LL_TV__(elem).expect(HTMLImageElement).val() as HTMLImageElement);
 		this.setAttribute();
 
@@ -207,12 +205,12 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 		this.clearBootAttr();
 	}
 
-	useSrc(stuff: IStyleClasses, group: TSrcGroup)
+	useSrc(stuff: unknown, group: TSrcGroup)
 	{
 		if(group === __LL_SrcGroup__.HIGH)
 		{
 			if(this.toggleSrc( __LL_SrcGroup__.HIGH, this.imgSrc.high ))
-				this.toggleStyles( __LL_SrcGroup__.HIGH, stuff );
+				this.toggleStyles( __LL_SrcGroup__.HIGH, stuff as IStyleClasses );
 
 			return;
 		}
@@ -221,7 +219,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 			throw new SyntaxError(`Invalid source group: "${group}".`);
 
 		if(this.toggleSrc( __LL_SrcGroup__.LAZY, this.imgSrc.lazy ))
-			this.toggleStyles( __LL_SrcGroup__.LAZY, stuff );
+			this.toggleStyles( __LL_SrcGroup__.LAZY, stuff as IStyleClasses );
 	}
 
 	setAttribute()
@@ -313,7 +311,7 @@ class __LL_Element__ extends __LL_UseSrc__<IStyleClasses> implements IApiUnavail
 	}
 }
 
-class __LL_ElementsGroup__ extends __LL_UseSrc__<number> implements IStartToObserve, IApiUnavailable
+class __LL_ElementsGroup__ implements IUseSrc, IStartToObserve, IApiUnavailable
 {
 	private readonly styleClasses: IStyleClasses;
 
@@ -321,7 +319,6 @@ class __LL_ElementsGroup__ extends __LL_UseSrc__<number> implements IStartToObse
 
 	constructor(query: string, useSrcAsFallbackToLazySrc: boolean, style: IStyleClasses)
 	{
-		super();
 		this.styleClasses = {
 			high: this.valStyle( style.high ),
 			lazy: this.valStyle( style.lazy ),
@@ -333,9 +330,9 @@ class __LL_ElementsGroup__ extends __LL_UseSrc__<number> implements IStartToObse
 		);
 	}
 
-	useSrc(stuff: number, group: TSrcGroup)
+	useSrc(stuff: unknown, group: TSrcGroup)
 	{
-		this.elements[ stuff ].useSrc( this.styleClasses, group );
+		this.elements[ stuff as number ].useSrc( this.styleClasses, group );
 	}
 
 	startToObserve(api: IntersectionObserver): void
@@ -373,14 +370,13 @@ class __LL_ElementsGroup__ extends __LL_UseSrc__<number> implements IStartToObse
 	}
 }
 
-class __LL_Observer__ extends __LL_UseSrc__<IntersectionObserverEntry> implements IStartToObserve
+class __LL_Observer__ implements IUseSrc, IStartToObserve
 {
 	private readonly api: IntersectionObserver;
 	private readonly elementsGroup: __LL_ElementsGroup__;
 
 	constructor(opt: IIOOptions, elementsGroup: __LL_ElementsGroup__)
 	{
-		super();
 		const OPT: IIOOptions = {
 			root:         new __LL_TV__(opt.root).expect(HTMLElement).fallback(null).val(),
 			rootMargin:   new __LL_TV__(opt.rootMargin).expect("string").fallback("0px 0px 0px 0px").val(),
@@ -393,10 +389,12 @@ class __LL_Observer__ extends __LL_UseSrc__<IntersectionObserverEntry> implement
 		this.elementsGroup = elementsGroup;
 	}
 
-	useSrc(stuff: IntersectionObserverEntry, group: TSrcGroup): void
+	useSrc(stuff: unknown, group: TSrcGroup): void
 	{
 		this.elementsGroup.useSrc(
-			parseInt( (stuff.target as HTMLElement).dataset.lliId ),
+			parseInt(
+				((stuff as IntersectionObserverEntry).target as HTMLElement).dataset.lliId
+			),
 			group,
 		);
 	}
