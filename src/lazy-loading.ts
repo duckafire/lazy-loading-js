@@ -267,7 +267,7 @@ class __LL_Element__ implements IUseSrc, IApiUnavailable
 			this.elem.getAttribute( "data-style-" + group )
 				?.split(",")
 				.map(item => item.trim())
-		) || null;
+		) ?? null;
 	}
 
 	private clearBootAttr(): void
@@ -458,11 +458,11 @@ class LazyLoadingImages implements IStartToObserve
 		try
 		{
 			this.observer = new __LL_Observer__(
-				OPT.observerOptions || ({} as IIOOptions),
+				OPT.observerOptions ?? ({} as IIOOptions),
 				new __LL_ElementsGroup__(
 					query,
-					OPT.useSrcAsFallbackToLazySrc || true,
-					OPT.styleClasses || ({} as IStyleClasses),
+					OPT.useSrcAsFallbackToLazySrc ?? true,
+					OPT.styleClasses ?? ({} as IStyleClasses),
 				),
 			);
 		}
