@@ -59,7 +59,7 @@ class Tag extends Getter
 }
 
 const TagsList = Object.freeze({
-	all:  Object.freeze(new Tag("all"), ["dist", "tests/libs"]),
+	all:  Object.freeze(new Tag("all", ["dist", "tests/libs"])),
 	dist: Object.freeze(new Tag("dist")),
 	test: Object.freeze(new Tag("test", "tests/libs")),
 
@@ -110,6 +110,7 @@ const del_dirs = (...dirs) =>
 // ALPHABETIC ORDER
 CMD.build = async (dest) =>
 {
+	CMD.clear();
 	CMD.compile(dest);
 
 	if(!TagsList.equals( dest, TagsList.test ))
@@ -130,42 +131,45 @@ CMD.clear = (tag) =>
 
 CMD.compile = (dest) =>
 {
-	const DEST_PATH = TagsList.trans(dest, TagsList.dist).asPath();
+	const TAG = TagsList.trans(dest, TagsList.all);
 
-	if(!FS.existsSync( DEST_PATH ))
-		FS.mkdirSync(  DEST_PATH );
+	for(const DEST_PATH of (TAG.isArray() ? TAG.asPath() : [TAG.asPath()]))
+	{
+		if(!FS.existsSync( DEST_PATH ))
+			FS.mkdirSync(  DEST_PATH );
 
-	const PARSED_CONFIG = TSC.parseJsonConfigFileContent(
-		TSC.readConfigFile(
-			PATH.resolve("tsconfig.json"),
-			TSC.sys.readFile
-		).config,
-		TSC.sys,
-		ROOT_DIR
-	);
+		const PARSED_CONFIG = TSC.parseJsonConfigFileContent(
+			TSC.readConfigFile(
+				PATH.resolve("tsconfig.json"),
+				TSC.sys.readFile
+			).config,
+			TSC.sys,
+			ROOT_DIR
+		);
 
-	PARSED_CONFIG.options.outDir = DEST_PATH;
+		PARSED_CONFIG.options.outDir = DEST_PATH;
 
-	const PROGRAM = TSC.createProgram(
-		PARSED_CONFIG.fileNames,
-		PARSED_CONFIG.options,
-		TSC.createCompilerHost(PARSED_CONFIG.options),
-	);
+		const PROGRAM = TSC.createProgram(
+			PARSED_CONFIG.fileNames,
+			PARSED_CONFIG.options,
+			TSC.createCompilerHost(PARSED_CONFIG.options),
+		);
 
-	const DIAG = TSC.getPreEmitDiagnostics(PROGRAM)
-		.concat(PROGRAM.emit().diagnostics);
+		const DIAG = TSC.getPreEmitDiagnostics(PROGRAM)
+			.concat(PROGRAM.emit().diagnostics);
 
-	if(!DIAG.length)
-		return;
+		if(!DIAG.length)
+			continue;
 
-	throw TSC.formatDiagnosticsWithColorAndContext(
-		DIAG,
-		{
-			getCurrentDirectory: TSC.sys.getCurrentDirectory,
-			getCanonicalFileName: f => f,
-			getNewLine: () => TSC.sys.newLine,
-		}
-	);
+		throw TSC.formatDiagnosticsWithColorAndContext(
+			DIAG,
+			{
+				getCurrentDirectory: TSC.sys.getCurrentDirectory,
+				getCanonicalFileName: f => f,
+				getNewLine: () => TSC.sys.newLine,
+			}
+		);
+	}
 };
 
 CMD.minify = async () =>
