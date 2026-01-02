@@ -452,7 +452,7 @@ class LazyLoadingImages implements IStartToObserve
 	{
 		const OPT: ILLImagesOptions = new __LL_TV__(opt)
 			.expect("object")
-			.fallback({}, true)
+			.fallback({})
 			.val();
 
 		try
