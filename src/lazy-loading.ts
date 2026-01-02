@@ -110,7 +110,7 @@ class __LL_TV__
 					: VALUE_TYPE === t
 				)
 			);
-			this.exceptionMessage = `Expecting type "${t}", instead "${VALUE_TYPE}".`;
+			this.exceptionMessage = `Expecting type "${t}", instead "${t === null ? "null" : VALUE_TYPE}".`;
 			return this;
 		}
 
