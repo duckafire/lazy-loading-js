@@ -15,7 +15,7 @@ Currently, it supports:
 
 ```html
 <!-- CDN (jsDelivr) URL -->
-<script src="https://cdn.jsdelivr.net/npm/@duckafire/lazy-loading-js@3/dist/lazy-loading.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/duckafire/lazy-loading-js@stable/dist/lazy-loading.min.js"></script>
 ```
 
 > [!IMPORTANT]
